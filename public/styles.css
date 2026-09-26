@@ -2493,3 +2493,18 @@ progress {
 .genre-choice span { border: 1px solid #61496f; border-radius: 999px; padding: 8px 12px; color: #e6dbea; font-size: 13px; }
 .genre-choice input:checked + span { background: #8738d5; border-color: #bd76ff; color: #fff; }
 .genre-choice input:focus-visible + span { outline: 2px solid #fff; outline-offset: 2px; }
+.members-grid { display: grid; grid-template-columns: minmax(260px, 380px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.members-grid .panel { min-width: 0; }
+.members-grid .panel h2 { display: flex; align-items: center; gap: 10px; }
+.member-list { display: grid; gap: 12px; margin-top: 22px; }
+.member-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding: 16px; border: 1px solid #493958; border-radius: 16px; background: #21182b; }
+.member-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.member-identity > div { display: grid; gap: 4px; min-width: 0; }
+.member-identity strong, .member-identity span { overflow-wrap: anywhere; }
+.member-identity span { color: #bcaacb; font-size: 12px; }
+.member-role { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.member-role select { min-width: 145px; }
+.member-role small { color: #bcaacb; }
+.member-role .form-error { width: 100%; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 900px) { .members-grid { grid-template-columns: 1fr; } }

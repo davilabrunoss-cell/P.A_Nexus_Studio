@@ -37,6 +37,8 @@ let state = {
   profile: null,
   catalog: [],
   studio: [],
+  members: [],
+  studioView: "projects",
   favorites: [],
   progress: [],
   filter: "Todos",
@@ -106,7 +108,8 @@ const brand = () =>
 const avatar = (p) =>
   `<span class="avatar ${esc(p?.color || "violet")}">${esc((p?.name || "N").slice(0, 1))}<i></i></span>`;
 function header() {
-  return `<header>${brand()}<nav aria-label="Menu principal"><a class="${state.tab === "home" ? "active" : ""}" href="#home">Início</a><a class="${state.tab === "catalog" ? "active" : ""}" href="#catalog">Explorar</a><a class="${state.tab === "list" ? "active" : ""}" href="#list">Minha lista</a></nav><div class="header-right"><button class="icon" data-action="search" aria-label="Buscar desenhos">${ico("search")}</button><span class="divider"></span><a class="studio-link" href="#studio">${ico("film")} Área da produtora</a>${state.user ? `<button class="profile-button" data-action="profiles" aria-label="Trocar perfil">${avatar(state.profile)}<span>${esc(state.profile?.name || state.user.name)}</span><span class="down">⌄</span></button>` : '<button class="btn small" data-action="login">Entrar</button>'}</div></header>`;
+  const creator = state.user?.role === "producer";
+  return `<header>${brand()}<nav aria-label="Menu principal"><a class="${state.tab === "home" ? "active" : ""}" href="#home">Início</a><a class="${state.tab === "catalog" ? "active" : ""}" href="#catalog">Explorar</a>${creator ? "" : `<a class="${state.tab === "list" ? "active" : ""}" href="#list">Minha lista</a>`}</nav><div class="header-right"><button class="icon" data-action="search" aria-label="Buscar desenhos">${ico("search")}</button><span class="divider"></span><a class="studio-link" href="#studio">${ico("film")} Área da produtora</a>${state.user ? creator ? `<button class="profile-button" data-action="logout" aria-label="Sair da conta">${avatar({name:state.user.name})}<span>${esc(state.user.name)}</span>${ico("logout")}</button>` : `<button class="profile-button" data-action="profiles" aria-label="Trocar perfil">${avatar(state.profile)}<span>${esc(state.profile?.name || state.user.name)}</span><span class="down">⌄</span></button>` : '<button class="btn small" data-action="login">Entrar</button>'}</div></header>`;
 }
 const footer = () =>
   `<footer><div><strong>P.A <b>NEXUS</b> STUDIO<span>✦</span></strong><p>Histórias que conectam universos.</p></div><span>Feito de imaginação. Feito para você.<br><small>© 2026 P.A Nexus Studio${hosted ? "" : " · Versão local"}</small></span><a href="#studio">Portal da produtora ${ico("arrow")}</a></footer>`;
@@ -124,7 +127,7 @@ const episodes = (p) => p.seasons.flatMap((s) => s.episodes);
 const rating = (p) =>
   `<span class="rating ${p.rating === "L" ? "free" : ""}">${esc(p.rating)}</span>`;
 function card(p, wide = false) {
-  return `<article class="card ${wide ? "wide" : ""}"><button class="card-art" data-action="details" data-id="${p.id}" aria-label="Ver ${esc(p.title)}"><img src="${esc(image(p))}" alt="${esc(p.title)}" loading="lazy"><span class="card-logo">N<span>✦</span></span>${p.demo ? '<span class="demo-label">UNIVERSO DEMO</span>' : ""}<span class="card-title ${p.id}">${esc(p.title.includes(":") ? p.title.split(":")[0] : p.title)}${p.title.includes(":") ? `<small>${esc(p.title.split(":")[1])}</small>` : ""}</span><span class="card-hover">${ico("play")}</span></button><div class="card-meta"><div><h3>${esc(p.title)}</h3><span>${esc(genreText(p))} <i>•</i> ${p.seasons.length} temporada${p.seasons.length !== 1 ? "s" : ""}</span></div><button class="icon save ${state.favorites.includes(p.id) ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${state.favorites.includes(p.id) ? "Remover" : "Adicionar"} ${esc(p.title)} ${state.favorites.includes(p.id) ? "da" : "à"} minha lista">${ico(state.favorites.includes(p.id) ? "check" : "plus")}</button></div></article>`;
+  return `<article class="card ${wide ? "wide" : ""}"><button class="card-art" data-action="details" data-id="${p.id}" aria-label="Ver ${esc(p.title)}"><img src="${esc(image(p))}" alt="${esc(p.title)}" loading="lazy"><span class="card-logo">N<span>✦</span></span>${p.demo ? '<span class="demo-label">UNIVERSO DEMO</span>' : ""}<span class="card-title ${p.id}">${esc(p.title.includes(":") ? p.title.split(":")[0] : p.title)}${p.title.includes(":") ? `<small>${esc(p.title.split(":")[1])}</small>` : ""}</span><span class="card-hover">${ico("play")}</span></button><div class="card-meta"><div><h3>${esc(p.title)}</h3><span>${esc(genreText(p))} <i>•</i> ${p.seasons.length} temporada${p.seasons.length !== 1 ? "s" : ""}</span></div>${state.user?.role === "producer" ? "" : `<button class="icon save ${state.favorites.includes(p.id) ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${state.favorites.includes(p.id) ? "Remover" : "Adicionar"} ${esc(p.title)} ${state.favorites.includes(p.id) ? "da" : "à"} minha lista">${ico(state.favorites.includes(p.id) ? "check" : "plus")}</button>`}</div></article>`;
 }
 function continueRow() {
   const items = state.progress
@@ -193,6 +196,7 @@ function catalog() {
 function render() {
   const route = location.hash.slice(1) || "home";
   state.tab = ["catalog", "list", "studio"].includes(route) ? route : "home";
+  if (state.tab === "list" && state.user?.role === "producer") { location.hash = "studio"; return; }
   if (state.tab === "studio") {
     renderStudio();
     return;
@@ -202,7 +206,7 @@ function render() {
   if (state.tab === "list" && !state.user) authModal();
 }
 async function loadLibrary() {
-  if (!state.profile) {
+  if (state.user?.role !== "viewer" || !state.profile) {
     state.favorites = [];
     state.progress = [];
     return;
@@ -237,6 +241,7 @@ function play(id, eid) {
     authModal();
     return;
   }
+  if (state.user.role !== "viewer") { toast("Para assistir, entre com uma conta de telespectador."); return; }
   const e = eid
     ? episodes(p).find((e) => e.id === eid)
     : episodes(p).find((e) => e.video);
@@ -292,6 +297,7 @@ async function refreshStudio() {
   state.studio = await api("/studio/projects");
   state.catalog = await api("/catalog");
 }
+async function refreshMembers() { state.members = await api("/studio/members"); }
 function renderStudio() {
   if (!state.user || state.user.role !== "producer") {
     $("#app").innerHTML =
@@ -300,9 +306,9 @@ function renderStudio() {
       footer();
     return;
   }
-  const p = state.studio.find((x) => x.id === state.editing);
+  const p = state.studioView === "members" ? null : state.studio.find((x) => x.id === state.editing);
   $("#app").innerHTML =
-    `<div class="studio-layout"><aside>${brand()}<span class="workspace-label">WORKSPACE DA PRODUTORA</span><nav><button class="active" data-action="studio-home">${ico("grid")} Visão geral</button><button data-action="new-project">${ico("plus")} Novo projeto</button><a href="#home">${ico("eye")} Ver plataforma</a></nav><div class="aside-bottom"><div><span class="live-dot"></span> Estúdio local</div><p>Um espaço para criar<br>universos inteiros.</p><button class="text-button" data-action="logout">${ico("logout")} Sair</button></div></aside><div class="studio-content"><div class="studio-top"><span>Estúdio <i>/</i> ${p ? esc(p.title) : "Visão geral"}</span><div>${avatar(state.profile)}<span>${esc(state.user.name)}</span></div></div><main id="main">${p ? editor(p) : dashboard()}</main></div></div>`;
+    `<div class="studio-layout"><aside>${brand()}<span class="workspace-label">WORKSPACE DA PRODUTORA</span><nav><button class="${state.studioView === "projects" ? "active" : ""}" data-action="studio-home">${ico("grid")} Visão geral</button><button data-action="new-project">${ico("plus")} Novo projeto</button><button class="${state.studioView === "members" ? "active" : ""}" data-action="studio-members">${ico("heart")} Membros</button><a href="#home">${ico("eye")} Ver plataforma</a></nav><div class="aside-bottom"><div><span class="live-dot"></span> ${hosted ? "Estúdio online" : "Estúdio local"}</div><p>Um espaço para criar<br>universos inteiros.</p><button class="text-button" data-action="logout">${ico("logout")} Sair</button></div></aside><div class="studio-content"><div class="studio-top"><span>Estúdio <i>/</i> ${state.studioView === "members" ? "Membros" : p ? esc(p.title) : "Visão geral"}</span><div>${avatar({name:state.user.name})}<span>${esc(state.user.name)}</span></div></div><main id="main">${state.studioView === "members" ? membersPage() : p ? editor(p) : dashboard()}</main></div></div>`;
   for (const form of $("#app").querySelectorAll(
     "#project-edit, #season-edit",
   )) {
@@ -333,6 +339,9 @@ function dashboard() {
     .join(
       "",
     )}</div><div class="section-head"><h2>Suas produções <span class="count">${projects.length}</span></h2><span>Crie. Organize. Dê o play.</span></div><div class="studio-projects">${projects.map((p) => `<article class="studio-card"><button data-action="edit-project" data-id="${p.id}" class="studio-cover"><img src="${esc(image(p))}" alt="${esc(p.title)}"><span class="status ${p.status}">${p.status === "published" ? "No catálogo" : "Rascunho"}</span></button><div><span class="eyebrow purple">${esc(genreText(p))}${p.demo ? " · DEMONSTRAÇÃO" : ""}</span><h3>${esc(p.title)}</h3><p>${p.seasons.length} temporada${p.seasons.length === 1 ? "" : "s"} <i>·</i> ${episodes(p).length} episódio${episodes(p).length === 1 ? "" : "s"}</p><button class="btn glass full" data-action="edit-project" data-id="${p.id}">${ico("edit")} Gerenciar produção ${ico("arrow")}</button></div></article>`).join("")}<button class="new-project-card" data-action="new-project"><span>${ico("plus")}</span><h3>Uma nova ideia?</h3><p>Dê vida ao seu próximo universo.</p></button></div>`;
+}
+function membersPage() {
+  return `<div class="dashboard-heading"><div><span class="eyebrow purple">EQUIPE E ACESSOS</span><h1>Gente que cria universos<span class="purple">.</span></h1><p>Cadastre membros e escolha quem cria ou assiste.</p></div></div><div class="members-grid"><section class="panel"><h2>${ico("plus")} Novo membro</h2><form id="member-create">${field("Nome", "name", "", "text", 'required maxlength="40" autocomplete="off"')}${field("E-mail", "email", "", "email", 'required autocomplete="off"')}${field("Senha inicial", "password", "", "password", 'required minlength="8" maxlength="200" autocomplete="new-password"')}<label>Nível de acesso<select name="role"><option value="viewer">Telespectador</option><option value="producer">Criador</option></select></label><p class="hint">Entregue a senha inicial ao membro por um canal seguro. Criadores gerenciam projetos e membros; telespectadores assistem e organizam seus perfis.</p><p class="form-error" role="alert"></p><button class="btn full" type="submit">${ico("plus")} Criar membro</button></form></section><section class="panel"><h2>${ico("heart")} Membros <span class="count">${state.members.length}</span></h2><div class="member-list">${state.members.map((m) => `<div class="member-row"><div class="member-identity">${avatar({name:m.name})}<div><strong>${esc(m.name)}</strong><span>${esc(m.email)}</span></div></div><form class="member-role" data-id="${m.id}"><label class="sr-only" for="member-${m.id}">Nível de acesso de ${esc(m.name)}</label><select id="member-${m.id}" name="role" ${m.id === state.user.id ? "disabled" : ""}><option value="viewer" ${m.role === "viewer" ? "selected" : ""}>Telespectador</option><option value="producer" ${m.role === "producer" ? "selected" : ""}>Criador</option></select>${m.id === state.user.id ? '<small>Você</small>' : '<button class="btn glass small" type="submit">Salvar</button>'}<p class="form-error" role="alert"></p></form></div>`).join("")}</div></section></div>`;
 }
 const field = (label, name, value, type = "text", extra = "") =>
   `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${extra}></label>`;
@@ -415,12 +424,13 @@ document.addEventListener("click", async (event) => {
         const d = await api("/login", "POST", {
           email: producer ? "studio@panexus.local" : "visitante@panexus.local",
           password: producer ? "NexusStudio@2026" : "NexusPlay@2026",
+          area: producer ? "studio" : "viewer",
         });
         await loggedIn(d, producer);
         break;
       }
       case "profiles":
-        profilesModal();
+        if (state.user?.role === "viewer") profilesModal();
         break;
       case "select-profile":
         state.profile = state.profiles.find((p) => p.id === id);
@@ -476,6 +486,7 @@ document.addEventListener("click", async (event) => {
           authModal();
           break;
         }
+        if (state.user.role !== "viewer") { toast("Entre com uma conta de telespectador para usar Minha lista."); break; }
         const saved = !state.favorites.includes(id);
         await api("/favorites/" + id, "PUT", { saved });
         if (saved) state.favorites.push(id);
@@ -488,13 +499,21 @@ document.addEventListener("click", async (event) => {
         if (!$("#modal").open) render();
         break;
       case "studio-home":
+        state.studioView = "projects";
         state.editing = null;
         render();
         break;
+      case "studio-members":
+        state.studioView = "members";
+        await refreshMembers();
+        render();
+        break;
       case "new-project":
+        state.studioView = "projects";
         newProject();
         break;
       case "edit-project":
+        state.studioView = "projects";
         state.editing = id;
         state.season = null;
         render();
@@ -566,18 +585,15 @@ document.addEventListener("click", async (event) => {
   }
 });
 async function loggedIn(d, studio) {
+  if (d.user.role !== (studio ? "producer" : "viewer")) throw new Error("Esta conta não tem acesso a esta área.");
   state.user = d.user;
   state.profiles = d.profiles;
-  state.profile = d.profiles[0];
-  localStorage.setItem("nexus-profile", state.profile.id);
-  await loadLibrary();
+  state.profile = studio ? null : d.profiles[0];
+  if (state.profile) localStorage.setItem("nexus-profile", state.profile.id);
+  if (!studio) await loadLibrary();
   closeModal();
   if (studio) {
-    if (d.user.role !== "producer") {
-      toast("Esta conta não possui acesso à produtora.");
-      render();
-      return;
-    }
+    state.studioView = "projects";
     await refreshStudio();
     location.hash = "studio";
     render();
@@ -589,7 +605,7 @@ async function loggedIn(d, studio) {
 }
 document.addEventListener("submit", async (event) => {
   const form = event.target;
-  if (!form.id) return;
+  if (!form.id && !form.classList.contains("member-role")) return;
   event.preventDefault();
   const submit = form.querySelector('[type="submit"]');
   const error = form.querySelector(".form-error");
@@ -607,8 +623,9 @@ document.addEventListener("submit", async (event) => {
     const d = Object.fromEntries(formData);
     if (form.id === "project-create" || form.id === "project-edit")
       d.genres = formData.getAll("genres");
-    switch (form.id) {
+    switch (form.classList.contains("member-role") ? "member-role" : form.id) {
       case "auth-form": {
+        d.area = form.dataset.producer === "true" ? "studio" : "viewer";
         const data = await api(
           form.dataset.register === "true" ? "/register" : "/login",
           "POST",
@@ -617,6 +634,18 @@ document.addEventListener("submit", async (event) => {
         await loggedIn(data, form.dataset.producer === "true");
         break;
       }
+      case "member-create":
+        await api("/studio/members", "POST", d);
+        await refreshMembers();
+        render();
+        toast("Membro criado.");
+        break;
+      case "member-role":
+        await api("/studio/members/" + form.dataset.id, "PUT", d);
+        await refreshMembers();
+        render();
+        toast("Acesso atualizado. O membro deverá entrar novamente.");
+        break;
       case "profile-create": {
         const p = await api("/profiles", "POST", d);
         state.profiles.push(p);
@@ -791,12 +820,12 @@ async function init() {
     ]);
     Object.assign(state, session);
     state.catalog = catalog;
-    state.profile =
+    state.profile = state.user?.role === "viewer" ?
       state.profiles.find(
         (p) => p.id === localStorage.getItem("nexus-profile"),
       ) ||
       state.profiles[0] ||
-      null;
+      null : null;
     await loadLibrary();
     if (state.user?.role === "producer") await refreshStudio();
     render();

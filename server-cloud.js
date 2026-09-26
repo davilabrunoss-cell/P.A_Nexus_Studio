@@ -119,6 +119,7 @@ app.use((req, res, next) => { (async () => {
 })().then(() => next()).catch(next); });
 const auth = (req, res, next) => req.user ? next() : res.status(401).json({ error: "Entre na sua conta para continuar." });
 const producer = (req, res, next) => req.user?.role === "producer" ? next() : res.status(403).json({ error: "Acesso exclusivo da produtora." });
+const viewer = (req, res, next) => !req.user ? auth(req, res, next) : req.user.role === "viewer" ? next() : res.status(403).json({ error: "Acesso exclusivo de telespectadores." });
 async function profile(req) {
   const id = req.headers["x-profile-id"] || "";
   if (!await one('SELECT id FROM nexus_profiles WHERE id=$1 AND "userId"=$2', [id, req.user.id]))
@@ -143,6 +144,10 @@ app.post("/api/login", route(async (req, res) => {
   if (a.count > 20) fail("Muitas tentativas. Aguarde um minuto.", 429);
   const u = await one("SELECT * FROM nexus_users WHERE email=$1", [str(req.body.email).toLowerCase()]);
   if (!u || !check(str(req.body.password, 200), u.password)) fail("E-mail ou senha incorretos.", 401);
+  const area = req.body.area || "viewer";
+  if (!["viewer", "studio"].includes(area)) fail("Área de acesso inválida.");
+  if (u.role !== (area === "studio" ? "producer" : "viewer"))
+    fail(area === "studio" ? "Esta conta não tem acesso à criação." : "Use a entrada da produtora para esta conta.", 403);
   attempts.delete(key);
   await session(res, u);
 }));
@@ -168,7 +173,7 @@ app.post("/api/logout", auth, route(async (req, res) => {
   await q("DELETE FROM nexus_sessions WHERE token=$1", [req.token]);
   res.clearCookie("nexus"); res.json({ ok: true });
 }));
-app.post("/api/profiles", auth, route(async (req, res) => {
+app.post("/api/profiles", viewer, route(async (req, res) => {
   const existing = await q('SELECT id FROM nexus_profiles WHERE "userId"=$1', [req.user.id]);
   if (existing.length >= 5) fail("Você pode criar até 5 perfis.");
   const name = str(req.body.name, 24);
@@ -185,14 +190,14 @@ app.get("/api/catalog", route(async (req, res) => {
   await due();
   res.json(await fullList(await q("SELECT * FROM nexus_projects WHERE status='published' ORDER BY featured DESC,created DESC")));
 }));
-app.get("/api/library", auth, route(async (req, res) => {
+app.get("/api/library", viewer, route(async (req, res) => {
   const id = await profile(req);
   res.json({
     favorites: (await q('SELECT "projectId" FROM nexus_favorites WHERE "profileId"=$1', [id])).map((x) => x.projectId),
     progress: await q('SELECT * FROM nexus_progress WHERE "profileId"=$1 ORDER BY updated DESC', [id])
   });
 }));
-app.put("/api/favorites/:id", auth, route(async (req, res) => {
+app.put("/api/favorites/:id", viewer, route(async (req, res) => {
   const id = await profile(req);
   if ((await project(req.params.id)).status !== "published") fail("Desenho indisponível.", 404);
   if (req.body.saved)
@@ -200,7 +205,7 @@ app.put("/api/favorites/:id", auth, route(async (req, res) => {
   else await q('DELETE FROM nexus_favorites WHERE "profileId"=$1 AND "projectId"=$2', [id, req.params.id]);
   res.json({ ok: true });
 }));
-app.put("/api/progress/:id", auth, route(async (req, res) => {
+app.put("/api/progress/:id", viewer, route(async (req, res) => {
   const id = await profile(req), e = await episode(req.params.id);
   if ((await project((await season(e.seasonId)).projectId)).status !== "published")
     fail("Episódio indisponível.", 404);
@@ -211,6 +216,53 @@ app.put("/api/progress/:id", auth, route(async (req, res) => {
     ON CONFLICT("profileId","episodeId") DO UPDATE SET seconds=EXCLUDED.seconds,
       duration=EXCLUDED.duration,updated=now()`, [id, e.id, Math.min(seconds, duration), duration]);
   res.json({ ok: true });
+}));
+app.get("/api/studio/members", producer, route(async (req, res) => {
+  res.json(await q("SELECT id,name,email,role FROM nexus_users ORDER BY name,email"));
+}));
+app.post("/api/studio/members", producer, route(async (req, res) => {
+  const name = str(req.body.name, 40), email = str(req.body.email).toLowerCase();
+  const password = str(req.body.password, 200), role = req.body.role;
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8)
+    fail("Preencha o nome, um e-mail válido e uma senha com ao menos 8 caracteres.");
+  if (!["viewer", "producer"].includes(role)) fail("Nível de acesso inválido.");
+  const id = randomUUID(), client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await q("INSERT INTO nexus_users(id,name,email,password,role) VALUES($1,$2,$3,$4,$5)",
+      [id, name, email, hash(password), role], client);
+    if (role === "viewer") await q('INSERT INTO nexus_profiles(id,"userId",name,color) VALUES($1,$2,$3,$4)',
+      [randomUUID(), id, name, "violet"], client);
+    await client.query("COMMIT");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    if (e.code === "23505") fail("Este e-mail já está cadastrado.", 409);
+    throw e;
+  } finally { client.release(); }
+  res.status(201).json({ id, name, email, role });
+}));
+app.put("/api/studio/members/:id", producer, route(async (req, res) => {
+  const role = req.body.role;
+  if (!["viewer", "producer"].includes(role)) fail("Nível de acesso inválido.");
+  if (req.params.id === req.user.id) fail("Você não pode alterar o próprio acesso.", 403);
+  const client = await pool.connect();
+  let member;
+  try {
+    await client.query("BEGIN");
+    member = await one("SELECT id,name,email,role FROM nexus_users WHERE id=$1 FOR UPDATE", [req.params.id], client);
+    if (!member) fail("Membro não encontrado.", 404);
+    if (member.role !== role) {
+      await q("UPDATE nexus_users SET role=$1 WHERE id=$2", [role, member.id], client);
+      if (role === "viewer" && !await one('SELECT id FROM nexus_profiles WHERE "userId"=$1 LIMIT 1', [member.id], client))
+        await q('INSERT INTO nexus_profiles(id,"userId",name,color) VALUES($1,$2,$3,$4)',
+          [randomUUID(), member.id, member.name, "violet"], client);
+      await q('DELETE FROM nexus_sessions WHERE "userId"=$1', [member.id], client);
+      member.role = role;
+    }
+    await client.query("COMMIT");
+  } catch (e) { await client.query("ROLLBACK"); throw e; }
+  finally { client.release(); }
+  res.json(member);
 }));
 app.get("/api/studio/projects", producer, route(async (req, res) => {
   await due();

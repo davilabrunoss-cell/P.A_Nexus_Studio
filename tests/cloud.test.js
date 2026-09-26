@@ -63,6 +63,29 @@ test("backend publicado registra espectador, restringe produtora e agenda catál
   assert.equal((await request("/api/studio/episodes/" + episodeId, "PUT", { video: "" })).status, 200);
   assert.equal((await request("/api/catalog")).data.length, 0);
 });
+test("backend publicado gerencia membros e separa entradas", async () => {
+  const created = await request("/api/studio/members", "POST", {
+    name: "Animadora", email: "animadora@example.test", password: "Segura@2026", role: "viewer"
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.data));
+  assert.equal("password" in created.data, false);
+  const viewerLogin = await request("/api/login", "POST", {
+    email: "animadora@example.test", password: "Segura@2026", area: "viewer"
+  });
+  assert.equal(viewerLogin.status, 200);
+  assert.equal(viewerLogin.data.profiles.length, 1);
+  assert.equal((await request("/api/login", "POST", {
+    email: "animadora@example.test", password: "Segura@2026", area: "studio"
+  })).status, 403);
+  const changed = await request("/api/studio/members/" + created.data.id, "PUT", { role: "producer" });
+  assert.equal(changed.status, 200, JSON.stringify(changed.data));
+  assert.equal((await request("/api/login", "POST", {
+    email: "animadora@example.test", password: "Segura@2026", area: "viewer"
+  })).status, 403);
+  assert.equal((await request("/api/login", "POST", {
+    email: "animadora@example.test", password: "Segura@2026", area: "studio"
+  })).status, 200);
+});
 test("upload na nuvem usa bucket privado e entrega URL temporária", async () => {
   const calls = [];
   globalThis.fetch = async (url, options) => {

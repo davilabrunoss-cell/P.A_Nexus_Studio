@@ -48,7 +48,7 @@ function addUser(name, email, password, role = "viewer") {
     hash(password),
     role,
   );
-  run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), id, name, "violet");
+  if (role === "viewer") run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), id, name, "violet");
   return id;
 }
 if (!get("SELECT id FROM users LIMIT 1")) {
@@ -169,6 +169,10 @@ const producer = (req, res, next) =>
   req.user?.role === "producer"
     ? next()
     : res.status(403).json({ error: "Acesso exclusivo da produtora." });
+const viewer = (req, res, next) =>
+  !req.user ? auth(req, res, next) : req.user.role === "viewer"
+    ? next()
+    : res.status(403).json({ error: "Acesso exclusivo de telespectadores." });
 const fail = (message, status = 400) => {
   const e = new Error(message);
   e.status = status;
@@ -314,6 +318,10 @@ app.post("/api/login", (req, res) => {
   );
   if (!u || !check(str(req.body.password, 200), u.password))
     fail("E-mail ou senha incorretos.", 401);
+  const area = req.body.area || "viewer";
+  if (!["viewer", "studio"].includes(area)) fail("Área de acesso inválida.");
+  if (u.role !== (area === "studio" ? "producer" : "viewer"))
+    fail(area === "studio" ? "Esta conta não tem acesso à criação." : "Use a entrada da produtora para esta conta.", 403);
   attempts.delete(key);
   session(req, res, u);
 });
@@ -343,7 +351,7 @@ app.post("/api/logout", auth, (req, res) => {
   res.clearCookie("nexus");
   res.json({ ok: true });
 });
-app.post("/api/profiles", auth, (req, res) => {
+app.post("/api/profiles", viewer, (req, res) => {
   if (all("SELECT id FROM profiles WHERE userId=?", req.user.id).length >= 5)
     fail("Você pode criar até 5 perfis.");
   const name = str(req.body.name, 24);
@@ -368,7 +376,7 @@ app.get("/api/catalog", (req, res) => {
     ).map(full),
   );
 });
-app.get("/api/library", auth, (req, res) => {
+app.get("/api/library", viewer, (req, res) => {
   const id = profile(req);
   res.json({
     favorites: all("SELECT projectId FROM favorites WHERE profileId=?", id).map(
@@ -380,7 +388,7 @@ app.get("/api/library", auth, (req, res) => {
     ),
   });
 });
-app.put("/api/favorites/:id", auth, (req, res) => {
+app.put("/api/favorites/:id", viewer, (req, res) => {
   const id = profile(req);
   if (project(req.params.id).status !== "published")
     fail("Desenho indisponível.", 404);
@@ -394,7 +402,7 @@ app.put("/api/favorites/:id", auth, (req, res) => {
     );
   res.json({ ok: true });
 });
-app.put("/api/progress/:id", auth, (req, res) => {
+app.put("/api/progress/:id", viewer, (req, res) => {
   const id = profile(req);
   const e = episode(req.params.id);
   if (project(season(e.seasonId).projectId).status !== "published")
@@ -416,6 +424,43 @@ app.put("/api/progress/:id", auth, (req, res) => {
     duration,
   );
   res.json({ ok: true });
+});
+app.get("/api/studio/members", producer, (req, res) => {
+  res.json(all("SELECT id,name,email,role FROM users ORDER BY name,email"));
+});
+app.post("/api/studio/members", producer, (req, res) => {
+  const name = str(req.body.name, 40), email = str(req.body.email).toLowerCase();
+  const password = str(req.body.password, 200), role = req.body.role;
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8)
+    fail("Preencha o nome, um e-mail válido e uma senha com ao menos 8 caracteres.");
+  if (!["viewer", "producer"].includes(role)) fail("Nível de acesso inválido.");
+  if (get("SELECT id FROM users WHERE email=?", email)) fail("Este e-mail já está cadastrado.", 409);
+  let id;
+  db.exec("BEGIN");
+  try {
+    id = addUser(name, email, password, role);
+    db.exec("COMMIT");
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+  res.status(201).json({ id, name, email, role });
+});
+app.put("/api/studio/members/:id", producer, (req, res) => {
+  const role = req.body.role;
+  if (!["viewer", "producer"].includes(role)) fail("Nível de acesso inválido.");
+  if (req.params.id === req.user.id) fail("Você não pode alterar o próprio acesso.", 403);
+  const member = get("SELECT id,name,email,role FROM users WHERE id=?", req.params.id);
+  if (!member) fail("Membro não encontrado.", 404);
+  if (member.role !== role) {
+    db.exec("BEGIN");
+    try {
+      run("UPDATE users SET role=? WHERE id=?", role, member.id);
+      if (role === "viewer" && !get("SELECT id FROM profiles WHERE userId=? LIMIT 1", member.id))
+        run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), member.id, member.name, "violet");
+      run("DELETE FROM sessions WHERE userId=?", member.id);
+      db.exec("COMMIT");
+    } catch (e) { db.exec("ROLLBACK"); throw e; }
+    member.role = role;
+  }
+  res.json(member);
 });
 app.get("/api/studio/projects", producer, (req, res) => {
   publishDueProjects();
