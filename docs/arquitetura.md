@@ -39,6 +39,8 @@ O player depende dos codecs do navegador. Não há conversão automática, HLS n
 
 Na nuvem, o banco e as mídias persistem fora do Render. O upload em memória é limitado a 50 MiB por arquivo e a chave do Storage não é enviada ao navegador. URLs assinadas de mídia duram uma hora; referências de rascunhos não são disponibilizadas a espectadores. O plano gratuito pode adormecer e impõe cotas de armazenamento e tráfego. Não há transcodificação automática nem DRM.
 
+O endereço público gratuito `pa-nexus-studio.pages.dev` pertence a um projeto Cloudflare Pages exclusivo deste repositório. O Pages serve os arquivos de `public` e sua Function encaminha apenas `/api/*` ao serviço Node próprio no Render. O navegador permanece na origem do Pages; o backend aceita essa origem por `PUBLIC_ORIGIN`, além da origem direta do Render. `BACKEND_ORIGIN` fica nas variáveis do projeto Pages. Nenhuma configuração do Hub Central é compartilhada ou alterada.
+
 ## Testes
 
 `npm test` inicia outro servidor com banco e uploads temporários. Verifica catálogo, HTTP Range, autenticação e autorização, criação em lote, rascunhos, imagens e vídeos reais, publicação, lista, progresso, isolamento entre perfis, origem, caminhos de mídia e exclusão em cascata. Os dados do usuário não são utilizados pelos testes.

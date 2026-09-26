@@ -13,6 +13,7 @@ process.env.SUPABASE_URL = "https://example.supabase.co";
 process.env.SUPABASE_SECRET_KEY = "test-secret";
 process.env.STUDIO_EMAIL = "studio@example.test";
 process.env.STUDIO_PASSWORD = "strong-test-password";
+process.env.PUBLIC_ORIGIN = "https://pa-nexus-studio.pages.dev";
 const { app } = await import("../server-cloud.js");
 const nativeFetch = globalThis.fetch;
 let server, base, cookie, profileId;
@@ -88,4 +89,15 @@ test("upload na nuvem usa bucket privado e entrega URL temporária", async () =>
     assert.equal(redirect.status, 302);
     assert.match(redirect.headers.get("location"), /\/storage\/v1\/object\/sign\//);
   } finally { globalThis.fetch = nativeFetch; }
+});
+test("aceita a origem do Pages e rejeita outras origens em alterações", async () => {
+  const url = base + "/api/register";
+  const allowed = await nativeFetch(url, { method: "POST", headers: {
+    Origin: process.env.PUBLIC_ORIGIN, "Content-Type": "application/json"
+  }, body: JSON.stringify({}) });
+  assert.equal(allowed.status, 400);
+  const rejected = await nativeFetch(url, { method: "POST", headers: {
+    Origin: "https://other.example", "Content-Type": "application/json"
+  }, body: JSON.stringify({}) });
+  assert.equal(rejected.status, 403);
 });
