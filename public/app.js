@@ -108,10 +108,10 @@ const brand = () =>
 const avatar = (p) =>
   `<span class="avatar ${esc(p?.color || "violet")}">${esc((p?.name || "N").slice(0, 1))}<i></i></span>`;
 function header() {
-  return `<header>${brand()}<nav aria-label="Menu principal"><a class="${state.tab === "home" ? "active" : ""}" href="#home">Início</a><a class="${state.tab === "catalog" ? "active" : ""}" href="#catalog">Explorar</a><a class="${state.tab === "list" ? "active" : ""}" href="#list">Minha lista</a></nav><div class="header-right"><button class="icon" data-action="search" aria-label="Buscar desenhos">${ico("search")}</button><span class="divider"></span><a class="studio-link" href="#studio">${ico("film")} Área da produtora</a>${state.user ? `<button class="profile-button" data-action="profiles" aria-label="Trocar perfil">${avatar(state.profile)}<span>${esc(state.profile?.name || state.user.name)}</span><span class="down">⌄</span></button>` : '<button class="btn small" data-action="login">Entrar</button>'}</div></header>`;
+  return `<header>${brand()}<nav aria-label="Menu principal"><a class="${state.tab === "home" ? "active" : ""}" href="#home">Início</a><a class="${state.tab === "catalog" ? "active" : ""}" href="#catalog">Explorar</a><a class="${state.tab === "trailers" ? "active" : ""}" href="#trailers">Trailers</a><a class="${state.tab === "list" ? "active" : ""}" href="#list">Minha lista</a></nav><div class="header-right"><button class="icon" data-action="search" aria-label="Buscar desenhos">${ico("search")}</button><span class="divider"></span><a class="studio-link" href="#studio">${ico("film")} Área da produtora</a>${state.user ? `<button class="profile-button" data-action="profiles" aria-label="Trocar perfil">${avatar(state.profile)}<span>${esc(state.profile?.name || state.user.name)}</span><span class="down">⌄</span></button>` : '<button class="btn small" data-action="login">Entrar</button>'}</div></header>`;
 }
 const footer = () =>
-  `<footer><div><strong>P.A <b>NEXUS</b> STUDIO<span>✦</span></strong><p>Histórias que conectam universos.</p></div><span>Feito de imaginação. Feito para você.<br><small>© 2026 P.A Nexus Studio${hosted ? "" : " · Versão local"}</small></span><a href="#studio">Portal da produtora ${ico("arrow")}</a></footer>`;
+  `<footer><div><strong><img class="footer-icon" src="/assets/nexus-icon.svg" alt=""> P.A <b>NEXUS</b> STUDIO</strong><p>Histórias que conectam universos.</p></div><span>Feito de imaginação. Feito para você.<br><small>© 2026 P.A Nexus Studio${hosted ? "" : " · Versão local"}</small></span><a href="#studio">Portal da produtora ${ico("arrow")}</a></footer>`;
 const image = (p) => p.cover || "/assets/brand.jpeg";
 const genreOptions = ["Ação", "Aventura", "Comédia", "Drama", "Fantasia", "Ficção científica", "Infantil", "Mistério", "Musical", "Romance", "Suspense", "Terror"];
 const genres = (p) => p.genres?.length ? p.genres : [p.genre];
@@ -126,7 +126,7 @@ const episodes = (p) => p.seasons.flatMap((s) => s.episodes);
 const rating = (p) =>
   `<span class="rating ${p.rating === "L" ? "free" : ""}">${esc(p.rating)}</span>`;
 function card(p, wide = false) {
-  return `<article class="card ${wide ? "wide" : ""}"><button class="card-art" data-action="details" data-id="${p.id}" aria-label="Ver ${esc(p.title)}"><img src="${esc(image(p))}" alt="${esc(p.title)}" loading="lazy"><span class="card-logo">N<span>✦</span></span>${p.demo ? '<span class="demo-label">UNIVERSO DEMO</span>' : ""}<span class="card-title ${p.id}">${esc(p.title.includes(":") ? p.title.split(":")[0] : p.title)}${p.title.includes(":") ? `<small>${esc(p.title.split(":")[1])}</small>` : ""}</span><span class="card-hover">${ico("play")}</span></button><div class="card-meta"><div><h3>${esc(p.title)}</h3><span>${esc(genreText(p))} <i>•</i> ${p.seasons.length} temporada${p.seasons.length !== 1 ? "s" : ""}</span></div><button class="icon save ${state.favorites.includes(p.id) ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${state.favorites.includes(p.id) ? "Remover" : "Adicionar"} ${esc(p.title)} ${state.favorites.includes(p.id) ? "da" : "à"} minha lista">${ico(state.favorites.includes(p.id) ? "check" : "plus")}</button></div></article>`;
+  return `<article class="card ${wide ? "wide" : ""}"><button class="card-art" data-action="details" data-id="${p.id}" aria-label="Ver ${esc(p.title)}"><img src="${esc(image(p))}" alt="${esc(p.title)}" loading="lazy"><span class="card-logo"><img src="/assets/nexus-icon.svg" alt=""></span>${p.demo ? '<span class="demo-label">UNIVERSO DEMO</span>' : ""}<span class="card-title ${p.id}">${esc(p.title.includes(":") ? p.title.split(":")[0] : p.title)}${p.title.includes(":") ? `<small>${esc(p.title.split(":")[1])}</small>` : ""}</span><span class="card-hover">${ico("play")}</span></button><div class="card-meta"><div><h3>${esc(p.title)}</h3><span>${esc(genreText(p))} <i>•</i> ${p.seasons.length} temporada${p.seasons.length !== 1 ? "s" : ""}</span></div><button class="icon save ${state.favorites.includes(p.id) ? "saved" : ""}" data-action="favorite" data-id="${p.id}" aria-label="${state.favorites.includes(p.id) ? "Remover" : "Adicionar"} ${esc(p.title)} ${state.favorites.includes(p.id) ? "da" : "à"} minha lista">${ico(state.favorites.includes(p.id) ? "check" : "plus")}</button></div></article>`;
 }
 function continueRow() {
   const items = state.progress
@@ -154,7 +154,7 @@ function home() {
     state.catalog[0];
   return `${
     hero
-      ? `<section class="hero" style="--hero:url('${esc(hero.banner || image(hero))}')"><div class="hero-content"><div class="eyebrow"><span class="mini-n">N✦</span> UMA PRODUÇÃO P.A NEXUS <span class="outlined">EM DESTAQUE</span></div><h1 class="${hero.title.split(":")[0].length > 14 ? "long-title" : ""}">${esc(hero.title.split(":")[0])}${hero.title.includes(":") ? `<span>${esc(hero.title.split(":")[1])}</span>` : ""}</h1><div class="hero-meta"><span class="match">Um novo universo espera por você</span><span>${dateLabel(hero.releaseDate, hero.year)}</span>${rating(hero)}<span>${hero.seasons.length} temporada${hero.seasons.length !== 1 ? "s" : ""}</span></div><p>${esc(hero.description)}</p><div class="hero-actions"><button class="btn" data-action="play" data-id="${hero.id}">${ico("play")} Assistir agora</button><button class="btn glass" data-action="details" data-id="${hero.id}">${ico("info")} Conhecer a série</button><button class="icon circle" data-action="favorite" data-id="${hero.id}" aria-label="Salvar destaque na minha lista">${ico(state.favorites.includes(hero.id) ? "check" : "plus")}</button></div><div class="hero-note"><span></span> Sua próxima aventura começa aqui</div></div><div class="hero-bottom"><span>IMAGINAÇÃO SEM LIMITES.</span><div class="hero-dots" aria-label="Selecionar destaque">${state.catalog
+      ? `<section class="hero" style="--hero:url('${esc(hero.banner || image(hero))}')"><div class="hero-content"><div class="eyebrow"><img class="mini-n" src="/assets/nexus-icon.svg" alt=""> UMA PRODUÇÃO P.A NEXUS <span class="outlined">EM DESTAQUE</span></div><h1 class="${hero.title.split(":")[0].length > 14 ? "long-title" : ""}">${esc(hero.title.split(":")[0])}${hero.title.includes(":") ? `<span>${esc(hero.title.split(":")[1])}</span>` : ""}</h1><div class="hero-meta"><span class="match">Um novo universo espera por você</span><span>${dateLabel(hero.releaseDate, hero.year)}</span>${rating(hero)}<span>${hero.seasons.length} temporada${hero.seasons.length !== 1 ? "s" : ""}</span></div><p>${esc(hero.description)}</p><div class="hero-actions"><button class="btn" data-action="play" data-id="${hero.id}">${ico("play")} Assistir agora</button><button class="btn glass" data-action="details" data-id="${hero.id}">${ico("info")} Conhecer a série</button><button class="icon circle" data-action="favorite" data-id="${hero.id}" aria-label="Salvar destaque na minha lista">${ico(state.favorites.includes(hero.id) ? "check" : "plus")}</button></div><div class="hero-note"><span></span> Sua próxima aventura começa aqui</div></div><div class="hero-bottom"><span>IMAGINAÇÃO SEM LIMITES.</span><div class="hero-dots" aria-label="Selecionar destaque">${state.catalog
           .slice(0, 6)
           .map(
             (p) =>
@@ -173,7 +173,7 @@ function home() {
       "Novos mundos estão a caminho.",
       "Nenhum desenho neste gênero por enquanto.",
     )
-  }</div></section><section class="studio-banner"><div class="orbit-mark">N<span>✦</span></div><div><span class="eyebrow purple">DO PRIMEIRO TRAÇO AO ÚLTIMO FRAME</span><h2>Todo grande universo<br>começa com uma ideia.</h2><p>Somos a P.A Nexus Studio. Transformamos imaginação<br>em histórias que merecem ser vividas.</p></div><a class="btn glass" href="#studio">Conheça o espaço de criação ${ico("arrow")}</a><span class="banner-star">✦</span></section></main>`;
+  }</div></section><section class="studio-banner"><img class="orbit-mark" src="/assets/nexus-icon.svg" alt=""><div><span class="eyebrow purple">DO PRIMEIRO TRAÇO AO ÚLTIMO FRAME</span><h2>Todo grande universo<br>começa com uma ideia.</h2><p>Somos a P.A Nexus Studio. Transformamos imaginação<br>em histórias que merecem ser vividas.</p></div><a class="btn glass" href="#studio">Conheça o espaço de criação ${ico("arrow")}</a><span class="banner-star">✦</span></section></main>`;
 }
 function empty(title, sub) {
   return `<div class="empty">${ico("film")}<h3>${title}</h3><p>${sub}</p></div>`;
@@ -192,15 +192,24 @@ function catalog() {
   );
   return `<main id="main" class="catalog-page"><span class="eyebrow purple">SEU PASSAPORTE PARA OUTROS MUNDOS</span><h1>${state.tab === "list" ? "Minha lista" : "Explore o inesperado"}<span class="purple">.</span></h1><p>${state.tab === "list" ? "Suas próximas aventuras, guardadas em um só lugar." : "Encontre uma história para cada versão de você."}</p><div class="catalog-controls"><label class="search-box">${ico("search")}<input id="search" placeholder="Buscar títulos, histórias, gêneros..." value="${esc(state.search)}" aria-label="Buscar no catálogo"></label><select id="genre-filter" aria-label="Gênero">${["Todos", ...new Set(state.catalog.flatMap(genres))].map((g) => `<option ${g === state.filter ? "selected" : ""}>${esc(g)}</option>`).join("")}</select></div><div id="catalog-results" class="card-grid">${list.map((p) => card(p)).join("") || empty(state.tab === "list" ? "Sua próxima história ainda está por aqui." : "Nenhum universo encontrado.", "Explore o catálogo ou tente uma nova busca.")}</div></main>`;
 }
+function trailersPage() {
+  const items = state.catalog.filter((p) => p.trailer);
+  return `<main id="main" class="catalog-page trailers-page"><span class="eyebrow purple">PRIMEIRO VISLUMBRE</span><h1>Trailers<span class="purple">.</span></h1><p>Descubra o próximo universo antes de dar o play.</p><div class="trailer-grid">${items.map((p) => `<article class="trailer-card"><button data-action="play-trailer" data-id="${p.id}" aria-label="Assistir trailer de ${esc(p.title)}"><img src="${esc(p.banner || image(p))}" alt=""><span class="trailer-play">${ico("play")}</span></button><div><span class="eyebrow purple">P.A NEXUS ORIGINAL</span><h2>${esc(p.title)}</h2><p>${esc(genreText(p))}</p><button class="text-button" data-action="details" data-id="${p.id}">Conhecer a série ${ico("arrow")}</button></div></article>`).join("") || empty("Trailers em breve.", "Novas histórias estão sendo preparadas pelo estúdio.")}</div></main>`;
+}
+function playTrailer(id) {
+  const p = state.catalog.find((item) => item.id === id);
+  if (!p?.trailer) return;
+  openModal(`<div class="player-heading"><span class="eyebrow purple">TRAILER OFICIAL</span><h2>${esc(p.title)}</h2></div><video controls autoplay playsinline preload="metadata" poster="${esc(p.banner || image(p))}" src="${esc(p.trailer)}"></video><div class="player-footer"><button class="text-button" data-action="details" data-id="${p.id}">Ver episódios ${ico("arrow")}</button></div>`, "player-modal");
+}
 function render() {
   const route = location.hash.slice(1) || "home";
-  state.tab = ["catalog", "list", "studio"].includes(route) ? route : "home";
+  state.tab = ["catalog", "trailers", "list", "studio"].includes(route) ? route : "home";
   if (state.tab === "studio") {
     renderStudio();
     return;
   }
   $("#app").innerHTML =
-    header() + (state.tab === "home" ? home() : catalog()) + footer();
+    header() + (state.tab === "home" ? home() : state.tab === "trailers" ? trailersPage() : catalog()) + footer();
   if (state.tab === "list" && !state.user) authModal();
 }
 async function loadLibrary() {
@@ -229,7 +238,7 @@ function details(id, seasonId) {
   if (!p) return;
   const s = p.seasons.find((s) => s.id === seasonId) || p.seasons[0];
   openModal(
-    `<div class="detail-hero" style="background-image:linear-gradient(0deg,#17131d,transparent),url('${esc(p.banner || image(p))}')"><span class="eyebrow">P.A NEXUS ORIGINAL</span><h2>${esc(p.title)}</h2></div><div class="detail-body"><div class="hero-meta">${rating(p)}<span>${dateLabel(p.releaseDate, p.year)}</span><span>${esc(genreText(p))}</span>${p.demo ? '<span class="demo-pill">Produção demonstrativa</span>' : ""}</div><p>${esc(p.description)}</p><div class="hero-actions"><button class="btn" data-action="play" data-id="${p.id}">${ico("play")} Assistir</button><button class="btn glass" data-action="favorite" data-id="${p.id}">${ico(state.favorites.includes(id) ? "check" : "plus")} Minha lista</button></div><div class="section-head"><h3>Episódios</h3><select id="season-select" data-id="${p.id}" aria-label="Selecionar temporada">${p.seasons.map((x) => `<option value="${x.id}" ${s?.id === x.id ? "selected" : ""}>Temporada ${x.number} · ${esc(x.title)}</option>`).join("")}</select></div>${s?.cover ? `<div class="season-banner"><img src="${esc(s.cover)}" alt="Capa da temporada ${s.number}"><span>Temporada ${s.number}<strong>${esc(s.title)}</strong></span></div>` : ""}<div class="episode-list">${s?.episodes.map((e) => `<button class="episode" data-action="play" data-id="${p.id}" data-episode="${e.id}" ${!e.video ? "disabled" : ""}><span class="episode-number">${String(e.number).padStart(2, "0")}</span><div class="episode-thumb"><img src="${esc(e.cover || s.cover || image(p))}" alt="">${ico("play")}</div><div><h4>${esc(e.title)}</h4><p>${esc(e.description || "Uma nova parte desta história espera por você.")}</p><small>${e.video ? (p.demo ? "Prévia demo · 12 segundos" : e.duration ? Math.ceil(e.duration / 60) + " min" : "Pronto para assistir") : "Em breve"}</small></div></button>`).join("") || empty("Novos episódios em breve.", "Volte para continuar esta jornada.")}</div></div>`,
+    `<div class="detail-hero" style="background-image:linear-gradient(0deg,#17131d,transparent),url('${esc(p.banner || image(p))}')"><span class="eyebrow">P.A NEXUS ORIGINAL</span><h2>${esc(p.title)}</h2></div><div class="detail-body"><div class="hero-meta">${rating(p)}<span>${dateLabel(p.releaseDate, p.year)}</span><span>${esc(genreText(p))}</span>${p.demo ? '<span class="demo-pill">Produção demonstrativa</span>' : ""}</div><p>${esc(p.description)}</p><div class="hero-actions"><button class="btn" data-action="play" data-id="${p.id}">${ico("play")} Assistir</button><button class="btn glass" data-action="favorite" data-id="${p.id}">${ico(state.favorites.includes(id) ? "check" : "plus")} Minha lista</button></div><div class="section-head"><h3>Episódios</h3><select id="season-select" data-id="${p.id}" aria-label="Selecionar temporada">${p.seasons.map((x) => `<option value="${x.id}" ${s?.id === x.id ? "selected" : ""}>Temporada ${x.number} · ${esc(x.title)}</option>`).join("")}</select></div>${s?.cover ? `<div class="season-banner"><img src="${esc(s.cover)}" alt="Capa da temporada ${s.number}"><span>Temporada ${s.number}<strong>${esc(s.title)}</strong></span></div>` : ""}<div class="episode-list">${s?.episodes.map((e) => `<button class="episode" data-action="play" data-id="${p.id}" data-episode="${e.id}" ${!e.video ? "disabled" : ""}><span class="episode-number">${String(e.number).padStart(2, "0")}</span><div class="episode-thumb"><img src="${esc(e.cover || s.cover || image(p))}" alt="">${ico("play")}</div><div><h4>${esc(e.title)}</h4><p>${esc(e.description || "Uma nova parte desta história espera por você.")}</p><small>${e.video ? (p.demo ? "Prévia demo · 12 segundos" : e.duration ? Math.ceil(e.duration / 60) + " min" : "Pronto para assistir") : "Em breve"}</small>${e.releaseDate ? `<small class="episode-release">Lançamento: ${dateLabel(e.releaseDate, "")}</small>` : ""}</div></button>`).join("") || empty("Novos episódios em breve.", "Volte para continuar esta jornada.")}</div></div>`,
     "details-modal",
   );
 }
@@ -303,9 +312,9 @@ function renderStudio() {
       footer();
     return;
   }
-  const p = state.studioView === "members" ? null : state.studio.find((x) => x.id === state.editing);
+  const p = state.studioView !== "projects" ? null : state.studio.find((x) => x.id === state.editing);
   $("#app").innerHTML =
-    `<div class="studio-layout"><aside>${brand()}<span class="workspace-label">WORKSPACE DA PRODUTORA</span><nav><button class="${state.studioView === "projects" ? "active" : ""}" data-action="studio-home">${ico("grid")} Visão geral</button><button data-action="new-project">${ico("plus")} Novo projeto</button><button class="${state.studioView === "members" ? "active" : ""}" data-action="studio-members">${ico("heart")} Membros</button><a href="#home">${ico("eye")} Ver plataforma</a></nav><div class="aside-bottom"><div><span class="live-dot"></span> ${hosted ? "Estúdio online" : "Estúdio local"}</div><p>Um espaço para criar<br>universos inteiros.</p><button class="text-button" data-action="logout">${ico("logout")} Sair</button></div></aside><div class="studio-content"><div class="studio-top"><span>Estúdio <i>/</i> ${state.studioView === "members" ? "Membros" : p ? esc(p.title) : "Visão geral"}</span><div>${avatar({name:state.user.name})}<span>${esc(state.user.name)}</span></div></div><main id="main">${state.studioView === "members" ? membersPage() : p ? editor(p) : dashboard()}</main></div></div>`;
+    `<div class="studio-layout"><aside>${brand()}<span class="workspace-label">WORKSPACE DA PRODUTORA</span><nav><button class="${state.studioView === "projects" ? "active" : ""}" data-action="studio-home">${ico("grid")} Visão geral</button><button data-action="new-project">${ico("plus")} Novo projeto</button><button class="${state.studioView === "trailers" ? "active" : ""}" data-action="studio-trailers">${ico("play")} Trailers</button><button class="${state.studioView === "members" ? "active" : ""}" data-action="studio-members">${ico("heart")} Membros</button><a href="#home">${ico("eye")} Ver plataforma</a></nav><div class="aside-bottom"><div><span class="live-dot"></span> ${hosted ? "Estúdio online" : "Estúdio local"}</div><p>Um espaço para criar<br>universos inteiros.</p><button class="text-button" data-action="logout">${ico("logout")} Sair</button></div></aside><div class="studio-content"><div class="studio-top"><span>Estúdio <i>/</i> ${state.studioView === "members" ? "Membros" : state.studioView === "trailers" ? "Trailers" : p ? esc(p.title) : "Visão geral"}</span><div>${avatar({name:state.user.name})}<span>${esc(state.user.name)}</span></div></div><main id="main">${state.studioView === "members" ? membersPage() : state.studioView === "trailers" ? studioTrailers() : p ? editor(p) : dashboard()}</main></div></div>`;
   for (const form of $("#app").querySelectorAll(
     "#project-edit, #season-edit",
   )) {
@@ -337,6 +346,9 @@ function dashboard() {
       "",
     )}</div><div class="section-head"><h2>Suas produções <span class="count">${projects.length}</span></h2><span>Crie. Organize. Dê o play.</span></div><div class="studio-projects">${projects.map((p) => `<article class="studio-card"><button data-action="edit-project" data-id="${p.id}" class="studio-cover"><img src="${esc(image(p))}" alt="${esc(p.title)}"><span class="status ${p.status}">${p.status === "published" ? "No catálogo" : "Rascunho"}</span></button><div><span class="eyebrow purple">${esc(genreText(p))}${p.demo ? " · DEMONSTRAÇÃO" : ""}</span><h3>${esc(p.title)}</h3><p>${p.seasons.length} temporada${p.seasons.length === 1 ? "" : "s"} <i>·</i> ${episodes(p).length} episódio${episodes(p).length === 1 ? "" : "s"}</p><button class="btn glass full" data-action="edit-project" data-id="${p.id}">${ico("edit")} Gerenciar produção ${ico("arrow")}</button></div></article>`).join("")}<button class="new-project-card" data-action="new-project"><span>${ico("plus")}</span><h3>Uma nova ideia?</h3><p>Dê vida ao seu próximo universo.</p></button></div>`;
 }
+function studioTrailers() {
+  return `<div class="dashboard-heading"><div><span class="eyebrow purple">PRIMEIRO VISLUMBRE</span><h1>Trailers dos seus universos<span class="purple">.</span></h1><p>Envie um trailer para cada desenho. Ele aparece na aba Trailers quando o desenho estiver publicado.</p></div></div><div class="studio-trailers">${state.studio.map((p) => `<section class="panel studio-trailer"><img src="${esc(p.banner || image(p))}" alt=""><div><span class="status ${p.status}">${p.status === "published" ? "No catálogo" : "Rascunho"}</span><h2>${esc(p.title)}</h2><form id="trailer-edit" data-id="${p.id}">${uploadField("Vídeo do trailer", "trailer", p.trailer || "", "video")}<p class="form-error" role="alert"></p><div class="button-row"><button class="btn small" type="submit">Salvar trailer</button>${p.trailer ? `<button class="btn glass small" type="button" data-action="remove-trailer" data-id="${p.id}">Remover trailer</button>` : ""}</div></form></div></section>`).join("") || empty("Crie seu primeiro desenho.", "Depois você poderá enviar um trailer para ele.")}</div>`;
+}
 function membersPage() {
   return `<div class="dashboard-heading"><div><span class="eyebrow purple">EQUIPE E ACESSOS</span><h1>Gente que cria universos<span class="purple">.</span></h1><p>Cadastre membros e escolha quem cria ou assiste.</p></div></div><div class="members-grid"><section class="panel"><h2>${ico("plus")} Novo membro</h2><form id="member-create">${field("Nome", "name", "", "text", 'required maxlength="40" autocomplete="off"')}${field("E-mail", "email", "", "email", 'required autocomplete="off"')}${field("Senha inicial", "password", "", "password", 'required minlength="8" maxlength="200" autocomplete="new-password"')}<label>Nível de acesso<select name="role"><option value="viewer">Telespectador</option><option value="producer">Criador</option></select></label><p class="hint">Entregue a senha inicial ao membro por um canal seguro. Criadores têm acesso total: produções, membros e reprodução. Telespectadores podem assistir e organizar seus perfis.</p><p class="form-error" role="alert"></p><button class="btn full" type="submit">${ico("plus")} Criar membro</button></form></section><section class="panel"><h2>${ico("heart")} Membros <span class="count">${state.members.length}</span></h2><div class="member-list">${state.members.map((m) => `<div class="member-row"><div class="member-identity">${avatar({name:m.name})}<div><strong>${esc(m.name)}</strong><span>${esc(m.email)}</span></div></div><form class="member-role" data-id="${m.id}"><label class="sr-only" for="member-${m.id}">Nível de acesso de ${esc(m.name)}</label><select id="member-${m.id}" name="role" ${m.id === state.user.id ? "disabled" : ""}><option value="viewer" ${m.role === "viewer" ? "selected" : ""}>Telespectador</option><option value="producer" ${m.role === "producer" ? "selected" : ""}>Criador</option></select>${m.id === state.user.id ? '<small>Você</small>' : '<button class="btn glass small" type="submit">Salvar</button>'}<p class="form-error" role="alert"></p></form></div>`).join("")}</div></section></div>`;
 }
@@ -345,7 +357,7 @@ const field = (label, name, value, type = "text", extra = "") =>
 const select = (label, name, options, value) =>
   `<label>${label}<select name="${name}">${options.map((x) => `<option ${x === value ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></label>`;
 function uploadField(label, name, value, kind = "image") {
-  return `<div class="upload-field"><label>${label}</label><input type="hidden" name="${name}" value="${esc(value)}"><label class="upload-box ${kind === "video" ? "video-upload" : ""}">${value && kind === "image" ? `<img src="${esc(value)}" alt="${esc(label)}">` : ico(kind === "video" ? "film" : "upload")}<span><strong>${value ? "Substituir arquivo" : kind === "video" ? "Enviar episódio" : "Enviar imagem"}</strong><small>${kind === "video" ? `MP4 ou WebM · até ${hosted ? "50 MB" : "2 GB"}` : "JPG, PNG ou WebP · até 10 MB"}</small></span><input type="file" data-upload="${name}" data-kind="${kind}" accept="${kind === "video" ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp"}" aria-label="${esc(label)}"></label><span class="upload-status">${value ? "✓ Arquivo selecionado" : ""}</span><progress hidden max="100" value="0"></progress></div>`;
+  return `<div class="upload-field"><label>${label}</label><input type="hidden" name="${name}" value="${esc(value)}"><label class="upload-box ${kind === "video" ? "video-upload" : ""}">${value && kind === "image" ? `<img src="${esc(value)}" alt="${esc(label)}">` : ico(kind === "video" ? "film" : "upload")}<span><strong>${value ? "Substituir arquivo" : kind === "video" ? (name === "trailer" ? "Enviar trailer" : "Enviar episódio") : "Enviar imagem"}</strong><small>${kind === "video" ? `MP4 ou WebM · até ${hosted ? "50 MB" : "2 GB"}` : "JPG, PNG ou WebP · até 10 MB"}</small></span><input type="file" data-upload="${name}" data-kind="${kind}" accept="${kind === "video" ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp"}" aria-label="${esc(label)}"></label><span class="upload-status">${value ? "✓ Arquivo selecionado" : ""}</span><progress hidden max="100" value="0"></progress></div>`;
 }
 function newProject() {
   openModal(
@@ -361,7 +373,7 @@ function editEpisode(id) {
   const p = state.studio.find((x) => x.id === state.editing),
     e = episodes(p).find((x) => x.id === id);
   openModal(
-    `<span class="eyebrow purple">EPISÓDIO ${e.number}</span><h2>Cada frame conta.</h2><form id="episode-edit" data-id="${e.id}">${field("Título do episódio", "title", e.title, "text", 'required maxlength="200"')}<label>Descrição<textarea name="description" rows="3" maxlength="2000">${esc(e.description)}</textarea></label>${field("Duração em segundos", "duration", e.duration, "number", 'min="0" max="86400"')}${uploadField("Capa do episódio", "cover", e.cover)}${uploadField("Vídeo do episódio", "video", e.video, "video")}<p class="hint">Prefira MP4 com vídeo H.264 e áudio AAC para maior compatibilidade.</p><p class="form-error" role="alert"></p><button type="submit" class="btn full">${ico("check")} Salvar episódio</button><button type="button" class="text-button danger" data-action="delete-episode" data-id="${e.id}">${ico("trash")} Excluir episódio</button></form>`,
+    `<span class="eyebrow purple">EPISÓDIO ${e.number}</span><h2>Cada frame conta.</h2><form id="episode-edit" data-id="${e.id}">${field("Título do episódio", "title", e.title, "text", 'required maxlength="200"')}<label>Descrição<textarea name="description" rows="3" maxlength="2000">${esc(e.description)}</textarea></label>${field("Data de lançamento", "releaseDate", e.releaseDate || "", "date")}${field("Duração em segundos", "duration", e.duration, "number", 'min="0" max="86400"')}${uploadField("Capa do episódio", "cover", e.cover)}${uploadField("Vídeo do episódio", "video", e.video, "video")}<p class="hint">Prefira MP4 com vídeo H.264 e áudio AAC para maior compatibilidade.</p><p class="form-error" role="alert"></p><button type="submit" class="btn full">${ico("check")} Salvar episódio</button><button type="button" class="text-button danger" data-action="delete-episode" data-id="${e.id}">${ico("trash")} Excluir episódio</button></form>`,
     "form-modal",
   );
 }
@@ -469,6 +481,9 @@ document.addEventListener("click", async (event) => {
       case "play":
         play(id, episodeId);
         break;
+      case "play-trailer":
+        playTrailer(id);
+        break;
       case "next-episode": {
         const eps = episodes(state.catalog.find((x) => x.id === id)).filter(
             (e) => e.video,
@@ -503,6 +518,16 @@ document.addEventListener("click", async (event) => {
         state.studioView = "members";
         await refreshMembers();
         render();
+        break;
+      case "studio-trailers":
+        state.studioView = "trailers";
+        render();
+        break;
+      case "remove-trailer":
+        await api("/studio/projects/" + id + "/trailer", "PUT", { trailer: "" });
+        await refreshStudio();
+        render();
+        toast("Trailer removido.");
         break;
       case "new-project":
         state.studioView = "projects";
@@ -679,6 +704,12 @@ document.addEventListener("submit", async (event) => {
         closeModal();
         render();
         toast("Episódio salvo.");
+        break;
+      case "trailer-edit":
+        await api("/studio/projects/" + form.dataset.id + "/trailer", "PUT", d);
+        await refreshStudio();
+        render();
+        toast("Trailer salvo.");
         break;
     }
   } catch (e) {

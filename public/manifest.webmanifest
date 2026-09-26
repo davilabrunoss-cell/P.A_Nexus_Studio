@@ -1,0 +1,13 @@
+{
+  "name": "P.A Nexus Studio",
+  "short_name": "Nexus",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0717",
+  "theme_color": "#0b0717",
+  "icons": [
+    { "src": "/assets/nexus-app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/nexus-app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/nexus-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

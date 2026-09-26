@@ -2,6 +2,8 @@
 
 As quatro ilustrações abaixo foram geradas com a ferramenta integrada `image_gen`, sem API externa configurada ou CLI de geração. A marca em `public/assets/brand.jpeg` é o arquivo original fornecido pelo usuário e foi copiada sem edição. O clipe `public/assets/demo.mp4` usa a arte Aurora com aproximação suave e fades, duração de 12 segundos e faixa silenciosa, gerado localmente com FFmpeg.
 
+O símbolo pequeno em `public/assets/nexus-icon.svg` foi desenhado em SVG a partir da imagem de referência enviada por Bruno em 26/09/2026: “N” roxo com órbita e estrela sobre fundo escuro. As versões PNG de 192, 180 e 512 pixels foram renderizadas desse SVG para ícones de aplicativo. O logo principal em `brand.jpeg` permanece o mesmo.
+
 ## Aurora
 
 Arquivo: `public/assets/aurora.png`.

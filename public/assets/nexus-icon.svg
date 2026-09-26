@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Símbolo P.A Nexus Studio">
+  <defs>
+    <linearGradient id="n" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#e166ff"/>
+      <stop offset=".42" stop-color="#a72cff"/>
+      <stop offset="1" stop-color="#5512c4"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#7722e9"/>
+      <stop offset=".55" stop-color="#d544ff"/>
+      <stop offset="1" stop-color="#9231ed"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="26" fill="#0b0717"/>
+  <path d="M34 91V28h15l31 38V28h16v63H81L50 53v38Z" fill="url(#n)"/>
+  <path d="M20 77c-3-10 20-25 52-34 23-6 42-7 46-1 5 8-21 25-54 34-27 8-42 10-44 1Zm5-3c5 6 39-3 66-15 12-5 21-10 24-14-8-2-31 3-54 11-20 7-33 14-36 18Z" fill="url(#orbit)"/>
+  <path d="m101 18 3.5 9.5 9.5 3.5-9.5 3.5-3.5 9.5-3.5-9.5-9.5-3.5 9.5-3.5Z" fill="#a837fb"/>
+</svg>

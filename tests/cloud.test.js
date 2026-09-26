@@ -53,12 +53,17 @@ test("backend publicado registra espectador, restringe produtora e agenda catál
   assert.equal((await request("/api/catalog")).data.length, 0);
   const episodeId = created.data.seasons[0].episodes[0].id;
   assert.equal((await request("/api/studio/episodes/" + episodeId, "PUT", {
-    video: "/assets/demo.mp4"
+    video: "/assets/demo.mp4", releaseDate: "2027-11-09"
+  })).status, 200);
+  assert.equal((await request("/api/studio/projects/" + created.data.id + "/trailer", "PUT", {
+    trailer: "/assets/demo.mp4"
   })).status, 200);
   const catalog = await request("/api/catalog");
   assert.equal(catalog.status, 200, JSON.stringify(catalog.data));
   assert.equal(catalog.data[0].id, created.data.id);
   assert.deepEqual(catalog.data[0].genres, ["Terror", "Mistério"]);
+  assert.equal(catalog.data[0].trailer, "/assets/demo.mp4");
+  assert.equal(catalog.data[0].seasons[0].episodes[0].releaseDate, "2027-11-09");
   assert.ok(catalog.data[0].releaseDate);
   assert.equal((await request("/api/studio/episodes/" + episodeId, "PUT", { video: "" })).status, 200);
   assert.equal((await request("/api/catalog")).data.length, 0);

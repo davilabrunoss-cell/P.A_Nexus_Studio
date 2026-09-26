@@ -75,7 +75,8 @@ const episode = (id) => required("nexus_episodes", id, "Episódio");
 async function full(p) {
   const seasons = await q('SELECT * FROM nexus_seasons WHERE "projectId"=$1 ORDER BY number', [p.id]);
   for (const s of seasons)
-    s.episodes = await q('SELECT * FROM nexus_episodes WHERE "seasonId"=$1 ORDER BY number', [s.id]);
+    s.episodes = (await q('SELECT * FROM nexus_episodes WHERE "seasonId"=$1 ORDER BY number', [s.id]))
+      .map((e) => ({ ...e, releaseDate: e.releaseDate ? new Date(e.releaseDate).toISOString().slice(0, 10) : null }));
   return { ...clean(p), seasons };
 }
 async function fullList(rows) { return Promise.all(rows.map(full)); }
@@ -321,6 +322,12 @@ app.put("/api/studio/projects/:id", producer, route(async (req, res) => {
   if (b.featured) await q("UPDATE nexus_projects SET featured=false WHERE id<>$1", [p.id]);
   res.json(await full(await project(p.id)));
 }));
+app.put("/api/studio/projects/:id/trailer", producer, route(async (req, res) => {
+  const p = await project(req.params.id);
+  const trailer = media(req.body.trailer, "video");
+  await q("UPDATE nexus_projects SET trailer=$1 WHERE id=$2", [trailer, p.id]);
+  res.json({ trailer });
+}));
 app.delete("/api/studio/projects/:id", producer, route(async (req, res) => {
   await project(req.params.id);
   await q("DELETE FROM nexus_projects WHERE id=$1", [req.params.id]);
@@ -356,9 +363,10 @@ app.post("/api/studio/seasons/:id/episodes", producer, route(async (req, res) =>
 app.put("/api/studio/episodes/:id", producer, route(async (req, res) => {
   const e = await episode(req.params.id), b = { ...e, ...req.body };
   if (!str(b.title)) fail("Informe o título do episódio.");
-  await q(`UPDATE nexus_episodes SET title=$1,description=$2,cover=$3,video=$4,duration=$5 WHERE id=$6`,
+  await q(`UPDATE nexus_episodes SET title=$1,description=$2,cover=$3,video=$4,duration=$5,"releaseDate"=$6 WHERE id=$7`,
     [str(b.title), str(b.description, 2000), media(b.cover), media(b.video, "video"),
-      number(b.duration || 0, 0, 86400), e.id]);
+      number(b.duration || 0, 0, 86400),
+      Object.hasOwn(req.body, "releaseDate") ? dateOf(req.body.releaseDate) : e.releaseDate, e.id]);
   await unpublishEmpty((await season(e.seasonId)).projectId);
   res.json({ ok: true });
 }));
@@ -399,7 +407,7 @@ app.get("/uploads/:name", route(async (req, res) => {
   if (req.user?.role !== "producer" && !await one(`SELECT p.id FROM nexus_projects p
     LEFT JOIN nexus_seasons s ON s."projectId"=p.id
     LEFT JOIN nexus_episodes e ON e."seasonId"=s.id
-    WHERE p.status='published' AND (p.cover=$1 OR p.banner=$1 OR s.cover=$1 OR e.cover=$1 OR e.video=$1)
+    WHERE p.status='published' AND (p.cover=$1 OR p.banner=$1 OR p.trailer=$1 OR s.cover=$1 OR e.cover=$1 OR e.video=$1)
     LIMIT 1`, [url])) fail("Arquivo não encontrado.", 404);
   const response = await fetch(storageUrl(`object/sign/nexus-media/${name}`), {
     method: "POST", headers: { ...storageHeaders(), "Content-Type": "application/json" },

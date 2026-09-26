@@ -20,14 +20,16 @@ db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,name TEXT,email TEXT UNIQUE,password TEXT,role TEXT);
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,userId TEXT REFERENCES users(id),expires INTEGER);
 CREATE TABLE IF NOT EXISTS profiles(id TEXT PRIMARY KEY,userId TEXT REFERENCES users(id),name TEXT,color TEXT);
-CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,title TEXT,description TEXT,genre TEXT,genres TEXT,rating TEXT,year INTEGER,releaseDate TEXT,scheduledDate TEXT,cover TEXT,banner TEXT,status TEXT DEFAULT 'draft',featured INTEGER DEFAULT 0,demo INTEGER DEFAULT 0,created TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,title TEXT,description TEXT,genre TEXT,genres TEXT,rating TEXT,year INTEGER,releaseDate TEXT,scheduledDate TEXT,cover TEXT,banner TEXT,trailer TEXT NOT NULL DEFAULT '',status TEXT DEFAULT 'draft',featured INTEGER DEFAULT 0,demo INTEGER DEFAULT 0,created TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS seasons(id TEXT PRIMARY KEY,projectId TEXT REFERENCES projects(id) ON DELETE CASCADE,number INTEGER,title TEXT,cover TEXT,UNIQUE(projectId,number));
-CREATE TABLE IF NOT EXISTS episodes(id TEXT PRIMARY KEY,seasonId TEXT REFERENCES seasons(id) ON DELETE CASCADE,number INTEGER,title TEXT,description TEXT DEFAULT '',cover TEXT,video TEXT,duration INTEGER DEFAULT 0,UNIQUE(seasonId,number));
+CREATE TABLE IF NOT EXISTS episodes(id TEXT PRIMARY KEY,seasonId TEXT REFERENCES seasons(id) ON DELETE CASCADE,number INTEGER,title TEXT,description TEXT DEFAULT '',cover TEXT,video TEXT,duration INTEGER DEFAULT 0,releaseDate TEXT,UNIQUE(seasonId,number));
 CREATE TABLE IF NOT EXISTS favorites(profileId TEXT REFERENCES profiles(id) ON DELETE CASCADE,projectId TEXT REFERENCES projects(id) ON DELETE CASCADE,PRIMARY KEY(profileId,projectId));
 CREATE TABLE IF NOT EXISTS progress(profileId TEXT REFERENCES profiles(id) ON DELETE CASCADE,episodeId TEXT REFERENCES episodes(id) ON DELETE CASCADE,seconds REAL,duration REAL,updated TEXT DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(profileId,episodeId));`);
 const projectColumns = new Set(db.prepare("PRAGMA table_info(projects)").all().map((x) => x.name));
-for (const column of ["genres", "releaseDate", "scheduledDate"])
+for (const column of ["genres", "releaseDate", "scheduledDate", "trailer"])
   if (!projectColumns.has(column)) db.exec(`ALTER TABLE projects ADD COLUMN ${column} TEXT`);
+const episodeColumns = new Set(db.prepare("PRAGMA table_info(episodes)").all().map((x) => x.name));
+if (!episodeColumns.has("releaseDate")) db.exec("ALTER TABLE episodes ADD COLUMN releaseDate TEXT");
 db.exec("UPDATE projects SET genres=json_array(genre) WHERE genres IS NULL");
 const all = (q, ...args) => db.prepare(q).all(...args);
 const get = (q, ...args) => db.prepare(q).get(...args);
@@ -119,7 +121,7 @@ if (!get("SELECT id FROM users LIMIT 1")) {
     );
     for (let n = 1; n <= 3; n++)
       run(
-        "INSERT INTO episodes VALUES(?,?,?,?,?,?,?,?)",
+        "INSERT INTO episodes(id,seasonId,number,title,description,cover,video,duration) VALUES(?,?,?,?,?,?,?,?)",
         randomUUID(),
         sid,
         n,
@@ -555,6 +557,11 @@ app.put("/api/studio/projects/:id", producer, (req, res) => {
   if (b.featured) run("UPDATE projects SET featured=0 WHERE id<>?", p.id);
   res.json(full(project(p.id)));
 });
+app.put("/api/studio/projects/:id/trailer", producer, (req, res) => {
+  const p = project(req.params.id);
+  run("UPDATE projects SET trailer=? WHERE id=?", media(req.body.trailer, "video"), p.id);
+  res.json({ trailer: project(p.id).trailer });
+});
 app.delete("/api/studio/projects/:id", producer, (req, res) => {
   project(req.params.id);
   run("DELETE FROM projects WHERE id=?", req.params.id);
@@ -614,12 +621,13 @@ app.put("/api/studio/episodes/:id", producer, (req, res) => {
     b = { ...e, ...req.body };
   if (!str(b.title)) fail("Informe o título do episódio.");
   run(
-    "UPDATE episodes SET title=?,description=?,cover=?,video=?,duration=? WHERE id=?",
+    "UPDATE episodes SET title=?,description=?,cover=?,video=?,duration=?,releaseDate=? WHERE id=?",
     str(b.title),
     str(b.description, 2000),
     media(b.cover),
     media(b.video, "video"),
     number(b.duration || 0, 0, 86400),
+    dateOf(b.releaseDate),
     e.id,
   );
   unpublishEmpty(season(e.seasonId).projectId);
@@ -681,7 +689,8 @@ app.use(
     const url = "/uploads/" + path.basename(req.path);
     if (req.user?.role === "producer") return next();
     const visible = get(
-      `SELECT p.id FROM projects p LEFT JOIN seasons s ON s.projectId=p.id LEFT JOIN episodes e ON e.seasonId=s.id WHERE p.status='published' AND (p.cover=? OR p.banner=? OR s.cover=? OR e.cover=? OR e.video=?) LIMIT 1`,
+      `SELECT p.id FROM projects p LEFT JOIN seasons s ON s.projectId=p.id LEFT JOIN episodes e ON e.seasonId=s.id WHERE p.status='published' AND (p.cover=? OR p.banner=? OR p.trailer=? OR s.cover=? OR e.cover=? OR e.video=?) LIMIT 1`,
+      url,
       url,
       url,
       url,

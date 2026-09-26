@@ -221,6 +221,31 @@ test("vários gêneros e datas são editáveis; publicação programada exige v�
   assert.equal(catalog.data.find((p) => p.id === created.data.id).status, "published");
   assert.deepEqual(catalog.data.find((p) => p.id === created.data.id).genres, ["Terror", "Suspense"]);
 });
+test("data de episódio e trailer ficam independentes e só aparecem em desenho publicado", async () => {
+  const created = await req("/api/studio/projects", "POST", {
+    title: "Universo dos trailers", genres: ["Aventura"]
+  }, producerCookie);
+  assert.equal(created.status, 201);
+  const id = created.data.id, episodeId = created.data.seasons[0].episodes[0].id;
+  assert.equal((await req("/api/studio/episodes/" + episodeId, "PUT", {
+    releaseDate: "2027-11-09"
+  }, producerCookie)).status, 200);
+  assert.equal((await req("/api/studio/episodes/" + episodeId, "PUT", {
+    releaseDate: "2027-02-29"
+  }, producerCookie)).status, 400);
+  assert.equal((await req("/api/studio/projects/" + id + "/trailer", "PUT", {
+    trailer: "/assets/demo.mp4"
+  }, producerCookie)).status, 200);
+  assert.equal((await req("/api/catalog")).data.some((p) => p.id === id), false);
+  const studio = (await req("/api/studio/projects", "GET", null, producerCookie)).data.find((p) => p.id === id);
+  assert.equal(studio.trailer, "/assets/demo.mp4");
+  assert.equal(studio.seasons[0].episodes[0].releaseDate, "2027-11-09");
+  await req("/api/studio/episodes/" + episodeId, "PUT", { video: "/assets/demo.mp4" }, producerCookie);
+  assert.equal((await req("/api/studio/projects/" + id, "PUT", { status: "published" }, producerCookie)).status, 200);
+  const publicProject = (await req("/api/catalog")).data.find((p) => p.id === id);
+  assert.equal(publicProject.trailer, "/assets/demo.mp4");
+  assert.equal(publicProject.seasons[0].episodes[0].releaseDate, "2027-11-09");
+});
 test("upload rejeita arquivo forjado e aceita imagem real e vídeo real", async () => {
   const fake = new FormData();
   fake.append(

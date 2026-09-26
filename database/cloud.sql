@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.nexus_projects (
   genre text NOT NULL, genres jsonb NOT NULL DEFAULT '["Aventura"]',
   rating text NOT NULL DEFAULT 'L', year integer NOT NULL,
   "releaseDate" date, "scheduledDate" date, cover text NOT NULL DEFAULT '',
-  banner text NOT NULL DEFAULT '', status text NOT NULL DEFAULT 'draft'
+  banner text NOT NULL DEFAULT '', trailer text NOT NULL DEFAULT '', status text NOT NULL DEFAULT 'draft'
     CHECK (status IN ('draft','published')),
   featured boolean NOT NULL DEFAULT false, demo boolean NOT NULL DEFAULT false,
   created timestamptz NOT NULL DEFAULT now()
@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.nexus_episodes (
   id text PRIMARY KEY, "seasonId" text NOT NULL REFERENCES public.nexus_seasons(id) ON DELETE CASCADE,
   number integer NOT NULL, title text NOT NULL, description text NOT NULL DEFAULT '',
   cover text NOT NULL DEFAULT '', video text NOT NULL DEFAULT '', duration integer NOT NULL DEFAULT 0,
+  "releaseDate" date,
   UNIQUE ("seasonId", number)
 );
 CREATE TABLE IF NOT EXISTS public.nexus_favorites (

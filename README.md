@@ -33,10 +33,13 @@ Na **Área da produtora → Membros**, um criador pode cadastrar contas de criad
 3. Em **Gerenciar produção**, configure a capa do desenho, a imagem de destaque e as informações gerais. Clique em **Salvar alterações**.
 4. Selecione uma temporada, envie sua capa e salve a temporada.
 5. Use o ícone de edição de cada episódio para definir título, descrição, capa e vídeo. Aguarde o envio terminar e clique em **Salvar episódio**. A duração é preenchida quando o navegador reconhece o vídeo.
+   A **Data de lançamento** de cada episódio é opcional, editável e exibida na lista de episódios. Ela informa o público; não agenda nem bloqueia a reprodução.
 6. Clique em **Publicar no catálogo** ou preencha **Data programada** para publicação automática na data escolhida. É necessário ao menos um episódio com vídeo. Sem vídeo, o projeto aguarda em rascunho e será publicado depois que um vídeo for salvo. Os episódios ainda sem vídeo aparecem como **Em breve**.
 7. Abra **Ver plataforma** para conferir e assistir ao catálogo com a mesma conta de criador, incluindo lista e progresso. **Publicar no catálogo** altera o catálogo da instância em uso; não realiza deploy de código.
 
 Temporadas e episódios podem ser adicionados posteriormente. Exclusões pedem confirmação. Um projeto pode voltar a rascunho para sair da vitrine.
+
+Em **Área da produtora → Trailers**, envie um vídeo de trailer para cada desenho. Os trailers de desenhos publicados aparecem na aba **Trailers** do site. Um trailer pode ser substituído ou removido sem mudar o vídeo dos episódios. Na versão pública, o arquivo usa o mesmo limite de 50 MiB por upload dos demais vídeos.
 
 A **Data de lançamento** pode ser editada ou removida a qualquer momento. Na publicação automática, ela é preenchida com a data efetiva se estiver vazia. Para cancelar uma programação, limpe **Data programada** e salve. O agendamento segue o calendário de São Paulo e é verificado pelo servidor a cada minuto e também ao abrir o catálogo.
 
@@ -62,6 +65,7 @@ A versão publicada usa `server-cloud.js` no plano gratuito do Render. Dados fic
 O `render.yaml` define o serviço Node com `npm ci`, `npm run start:cloud` e verificação em `/api/health`. No Render, configure como segredos `DATABASE_URL` (pooler de sessão do Supabase), `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `STUDIO_EMAIL` e `STUDIO_PASSWORD` (ao menos 12 caracteres). Nenhum desses valores deve entrar no Git. O primeiro início cria a conta da produtora com essas credenciais; o cadastro público cria somente espectadores. Se a senha da produtora mudar depois, altere-a também no banco, pois mudar só a variável de ambiente não redefine uma conta já criada.
 
 As migrações do banco estão em `database/cloud.sql`, `database/cloud-access.sql` e `database/cloud-demo.sql`. Após configurar as variáveis necessárias nesta máquina, `node scripts/migrate-local-to-cloud.mjs` copia projetos locais publicados e suas mídias referenciadas, sem copiar contas, sessões, perfis ou histórico pessoal. O script pula projetos que já existem no destino e não apaga o banco local.
+Para bancos Nexus já existentes, aplique também `database/cloud-trailers-and-episode-dates.sql` antes de publicar a API que usa trailers e datas de episódios.
 
 No plano gratuito, cada upload de mídia está limitado a 50 MiB, com até 1 GB de armazenamento de arquivos e franquias de tráfego. O Render pode dormir após 15 minutos sem visitas; a primeira abertura pode demorar. Essa configuração é adequada para um lançamento pequeno e deve ser revista se houver muitos espectadores ou episódios grandes.
 
@@ -74,6 +78,7 @@ O projeto Pages `pa-nexus-studio` é separado do Hub Central e usa a pasta `publ
 Aurora: além do portal, Órbita 9, O segredo do bosque e Neon Rush são produções fictícias de demonstração. As quatro artes foram geradas para este projeto. Todos os episódios iniciais usam uma prévia visual silenciosa de 12 segundos, criada a partir da ilustração de Aurora; não são episódios completos. Substitua ou exclua os exemplos pelo painel.
 
 A marca original está em `public/assets/brand.jpeg`. A origem e os prompts das ilustrações estão em `docs/artes.md`.
+O logo principal do cabeçalho continua sendo a marca original. O símbolo `N` com órbita em `public/assets/nexus-icon.svg`, baseado na referência enviada por Bruno, aparece no rodapé, nos detalhes visuais e no favicon/ícone instalável.
 
 ## Escopo desta entrega
 
