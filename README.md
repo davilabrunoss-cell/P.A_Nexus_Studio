@@ -63,6 +63,10 @@ As migrações do banco estão em `database/cloud.sql`, `database/cloud-access.s
 
 No plano gratuito, cada upload de mídia está limitado a 50 MiB, com até 1 GB de armazenamento de arquivos e franquias de tráfego. O Render pode dormir após 15 minutos sem visitas; a primeira abertura pode demorar. Essa configuração é adequada para um lançamento pequeno e deve ser revista se houver muitos espectadores ou episódios grandes.
 
+### Endereço gratuito no Cloudflare Pages
+
+O projeto Pages `pa-nexus-studio` é separado do Hub Central e usa a pasta `public` do repositório como saída estática. O endereço gratuito é `https://pa-nexus-studio.pages.dev`; não requer domínio comprado. A função em `functions/api/[[path]].js` encaminha `/api/*` ao serviço Node do Nexus no Render. Configure `BACKEND_ORIGIN` no Pages com a URL HTTPS desse serviço, sem barra final, e `PUBLIC_ORIGIN=https://pa-nexus-studio.pages.dev` no Render. O arquivo `public/_routes.json` restringe as invocações da função à API. Sem `BACKEND_ORIGIN`, a interface carrega, mas login, catálogo e painel retornam indisponibilidade.
+
 ## Catálogo de exemplo
 
 Aurora: além do portal, Órbita 9, O segredo do bosque e Neon Rush são produções fictícias de demonstração. As quatro artes foram geradas para este projeto. Todos os episódios iniciais usam uma prévia visual silenciosa de 12 segundos, criada a partir da ilustração de Aurora; não são episódios completos. Substitua ou exclua os exemplos pelo painel.

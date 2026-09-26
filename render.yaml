@@ -20,3 +20,5 @@ services:
         sync: false
       - key: STUDIO_PASSWORD
         sync: false
+      - key: PUBLIC_ORIGIN
+        sync: false

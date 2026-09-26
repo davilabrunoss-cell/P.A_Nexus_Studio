@@ -101,8 +101,10 @@ app.disable("x-powered-by");
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "same-origin");
+  const allowedOrigins = [`${req.protocol}://${req.get("host")}`];
+  if (process.env.PUBLIC_ORIGIN) allowedOrigins.push(process.env.PUBLIC_ORIGIN.replace(/\/$/, ""));
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method) && req.headers.origin &&
-      req.headers.origin !== `${req.protocol}://${req.get("host")}`)
+      !allowedOrigins.includes(req.headers.origin))
     return res.status(403).json({ error: "Origem não autorizada." });
   next();
 });
