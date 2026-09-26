@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: pa-nexus-studio
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm ci
+    startCommand: npm run start:cloud
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: STUDIO_EMAIL
+        sync: false
+      - key: STUDIO_PASSWORD
+        sync: false
