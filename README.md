@@ -75,6 +75,6 @@ A marca original está em `public/assets/brand.jpeg`. A origem e os prompts das 
 
 ## Escopo desta entrega
 
-Versão funcional para uso local, sem hospedagem, assinatura, cobrança, envio de e-mails, recuperação de senha, DRM ou transcodificação automática. O servidor escuta apenas em `127.0.0.1`; o acesso em celular foi validado por simulação de tamanho de tela. Para disponibilizar na internet, é necessário configurar infraestrutura, HTTPS, contas reais de administração e armazenamento apropriado. As credenciais e os botões demonstrativos são intencionais nesta versão local.
+O site está disponível em `https://pa-nexus-studio.pages.dev` com frontend no Cloudflare Pages, API no Render gratuito e dados/mídias no Supabase gratuito. A instalação local continua disponível em `127.0.0.1:3210`. Não há assinatura, cobrança, envio de e-mails, recuperação de senha, DRM ou transcodificação automática. O Render gratuito pode adormecer após inatividade, atrasando a primeira abertura. As credenciais demonstrativas aparecem somente na versão local; a conta pública da produtora usa um segredo configurado no Render.
 
 Arquitetura e regras permanentes: `docs/arquitetura.md`. A memória operacional Bruno–Codex é mantida fora do repositório.
