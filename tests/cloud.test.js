@@ -69,7 +69,7 @@ test("upload na nuvem usa bucket privado e entrega URL temporária", async () =>
     if (String(url).startsWith(process.env.SUPABASE_URL)) {
       calls.push({ url: String(url), options });
       return new Response(JSON.stringify(String(url).includes("/sign/")
-        ? { signedURL: "/storage/v1/object/sign/nexus-media/test.png?token=ok" }
+        ? { signedURL: "/object/sign/nexus-media/test.png?token=ok" }
         : { Key: "test.png" }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
     return nativeFetch(url, options);

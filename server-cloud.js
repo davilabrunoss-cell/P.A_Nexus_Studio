@@ -349,8 +349,14 @@ app.get("/uploads/:name", route(async (req, res) => {
   });
   if (!response.ok) fail("Arquivo indisponível.", 502);
   const signed = await response.json();
+  if (typeof signed.signedURL !== "string") fail("Arquivo indisponível.", 502);
+  const signedUrl = new URL(signed.signedURL, process.env.SUPABASE_URL);
+  if (signedUrl.origin !== new URL(process.env.SUPABASE_URL).origin)
+    fail("Arquivo indisponível.", 502);
+  if (!signedUrl.pathname.startsWith("/storage/v1/"))
+    signedUrl.pathname = `/storage/v1${signedUrl.pathname}`;
   res.setHeader("Cache-Control", "private, max-age=60");
-  res.redirect(302, new URL(signed.signedURL, process.env.SUPABASE_URL).toString());
+  res.redirect(302, signedUrl.toString());
 }));
 app.use("/api", (req, res) => res.status(404).json({ error: "Recurso não encontrado." }));
 app.use(express.static(path.join(ROOT, "public")));
