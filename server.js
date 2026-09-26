@@ -48,7 +48,7 @@ function addUser(name, email, password, role = "viewer") {
     hash(password),
     role,
   );
-  if (role === "viewer") run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), id, name, "violet");
+  run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), id, name, "violet");
   return id;
 }
 if (!get("SELECT id FROM users LIMIT 1")) {
@@ -169,10 +169,11 @@ const producer = (req, res, next) =>
   req.user?.role === "producer"
     ? next()
     : res.status(403).json({ error: "Acesso exclusivo da produtora." });
-const viewer = (req, res, next) =>
-  !req.user ? auth(req, res, next) : req.user.role === "viewer"
-    ? next()
-    : res.status(403).json({ error: "Acesso exclusivo de telespectadores." });
+const viewer = auth;
+function ensureProfile(user) {
+  if (!get("SELECT id FROM profiles WHERE userId=? LIMIT 1", user.id))
+    run("INSERT INTO profiles VALUES(?,?,?,?)", randomUUID(), user.id, user.name, "violet");
+}
 const fail = (message, status = 400) => {
   const e = new Error(message);
   e.status = status;
@@ -283,6 +284,7 @@ function full(p) {
   };
 }
 function session(req, res, user) {
+  ensureProfile(user);
   const token = randomBytes(32).toString("hex");
   run("DELETE FROM sessions WHERE expires<?", Date.now());
   run(
@@ -320,8 +322,8 @@ app.post("/api/login", (req, res) => {
     fail("E-mail ou senha incorretos.", 401);
   const area = req.body.area || "viewer";
   if (!["viewer", "studio"].includes(area)) fail("Área de acesso inválida.");
-  if (u.role !== (area === "studio" ? "producer" : "viewer"))
-    fail(area === "studio" ? "Esta conta não tem acesso à criação." : "Use a entrada da produtora para esta conta.", 403);
+  if (area === "studio" && u.role !== "producer")
+    fail("Esta conta não tem acesso à criação.", 403);
   attempts.delete(key);
   session(req, res, u);
 });
@@ -342,7 +344,7 @@ app.get("/api/session", (req, res) =>
   res.json({
     user: req.user || null,
     profiles: req.user
-      ? all("SELECT * FROM profiles WHERE userId=?", req.user.id)
+      ? (ensureProfile(req.user), all("SELECT * FROM profiles WHERE userId=?", req.user.id))
       : [],
   }),
 );

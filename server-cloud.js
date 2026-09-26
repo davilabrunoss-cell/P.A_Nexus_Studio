@@ -119,7 +119,12 @@ app.use((req, res, next) => { (async () => {
 })().then(() => next()).catch(next); });
 const auth = (req, res, next) => req.user ? next() : res.status(401).json({ error: "Entre na sua conta para continuar." });
 const producer = (req, res, next) => req.user?.role === "producer" ? next() : res.status(403).json({ error: "Acesso exclusivo da produtora." });
-const viewer = (req, res, next) => !req.user ? auth(req, res, next) : req.user.role === "viewer" ? next() : res.status(403).json({ error: "Acesso exclusivo de telespectadores." });
+const viewer = auth;
+async function ensureProfile(user) {
+  if (!await one('SELECT id FROM nexus_profiles WHERE "userId"=$1 LIMIT 1', [user.id]))
+    await q('INSERT INTO nexus_profiles(id,"userId",name,color) VALUES($1,$2,$3,$4)',
+      [randomUUID(), user.id, user.name, "violet"]);
+}
 async function profile(req) {
   const id = req.headers["x-profile-id"] || "";
   if (!await one('SELECT id FROM nexus_profiles WHERE id=$1 AND "userId"=$2', [id, req.user.id]))
@@ -127,6 +132,7 @@ async function profile(req) {
   return id;
 }
 async function session(res, user) {
+  await ensureProfile(user);
   const token = randomBytes(32).toString("hex");
   await q("DELETE FROM nexus_sessions WHERE expires<$1", [Date.now()]);
   await q('INSERT INTO nexus_sessions(token,"userId",expires) VALUES($1,$2,$3)',
@@ -146,8 +152,8 @@ app.post("/api/login", route(async (req, res) => {
   if (!u || !check(str(req.body.password, 200), u.password)) fail("E-mail ou senha incorretos.", 401);
   const area = req.body.area || "viewer";
   if (!["viewer", "studio"].includes(area)) fail("Área de acesso inválida.");
-  if (u.role !== (area === "studio" ? "producer" : "viewer"))
-    fail(area === "studio" ? "Esta conta não tem acesso à criação." : "Use a entrada da produtora para esta conta.", 403);
+  if (area === "studio" && u.role !== "producer")
+    fail("Esta conta não tem acesso à criação.", 403);
   attempts.delete(key);
   await session(res, u);
 }));
@@ -167,7 +173,7 @@ app.post("/api/register", route(async (req, res) => {
 }));
 app.get("/api/session", route(async (req, res) => res.json({
   user: req.user || null,
-  profiles: req.user ? await q('SELECT * FROM nexus_profiles WHERE "userId"=$1', [req.user.id]) : []
+  profiles: req.user ? (await ensureProfile(req.user), await q('SELECT * FROM nexus_profiles WHERE "userId"=$1', [req.user.id])) : []
 })));
 app.post("/api/logout", auth, route(async (req, res) => {
   await q("DELETE FROM nexus_sessions WHERE token=$1", [req.token]);
@@ -231,7 +237,7 @@ app.post("/api/studio/members", producer, route(async (req, res) => {
     await client.query("BEGIN");
     await q("INSERT INTO nexus_users(id,name,email,password,role) VALUES($1,$2,$3,$4,$5)",
       [id, name, email, hash(password), role], client);
-    if (role === "viewer") await q('INSERT INTO nexus_profiles(id,"userId",name,color) VALUES($1,$2,$3,$4)',
+    await q('INSERT INTO nexus_profiles(id,"userId",name,color) VALUES($1,$2,$3,$4)',
       [randomUUID(), id, name, "violet"], client);
     await client.query("COMMIT");
   } catch (e) {

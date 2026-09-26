@@ -22,7 +22,7 @@ A tela de entrada possui botões para experimentar as contas de demonstração s
 | Produtora  | studio@panexus.local    | NexusStudio@2026 |
 | Espectador | visitante@panexus.local | NexusPlay@2026   |
 
-Também é possível criar contas de telespectador pela interface. Cada conta aceita até cinco perfis, com listas e histórico independentes. Contas de criador e de telespectador têm entradas e permissões separadas. Para assistir, use uma conta de telespectador.
+Também é possível criar contas de telespectador pela interface. Cada conta aceita até cinco perfis, com listas e histórico independentes. Criadores têm acesso total à produtora e à área de assistir; telespectadores acessam apenas a área de assistir. A conta de criador pode entrar tanto pela produtora quanto pela entrada de espectadores.
 
 Na **Área da produtora → Membros**, um criador pode cadastrar contas de criador ou telespectador e alterar o nível de acesso de outros membros. O criador informa uma senha inicial ao cadastrar a conta e deve entregá-la ao membro por um canal seguro. A mudança de nível encerra as sessões desse membro; ele precisa entrar novamente na área correspondente. Um criador não pode alterar o próprio nível. O cadastro público continua limitado a telespectadores.
 
@@ -34,7 +34,7 @@ Na **Área da produtora → Membros**, um criador pode cadastrar contas de criad
 4. Selecione uma temporada, envie sua capa e salve a temporada.
 5. Use o ícone de edição de cada episódio para definir título, descrição, capa e vídeo. Aguarde o envio terminar e clique em **Salvar episódio**. A duração é preenchida quando o navegador reconhece o vídeo.
 6. Clique em **Publicar no catálogo** ou preencha **Data programada** para publicação automática na data escolhida. É necessário ao menos um episódio com vídeo. Sem vídeo, o projeto aguarda em rascunho e será publicado depois que um vídeo for salvo. Os episódios ainda sem vídeo aparecem como **Em breve**.
-7. Abra **Ver plataforma** para conferir o catálogo. Para assistir com lista e progresso, entre com uma conta de telespectador. **Publicar no catálogo** altera o catálogo da instância em uso; não realiza deploy de código.
+7. Abra **Ver plataforma** para conferir e assistir ao catálogo com a mesma conta de criador, incluindo lista e progresso. **Publicar no catálogo** altera o catálogo da instância em uso; não realiza deploy de código.
 
 Temporadas e episódios podem ser adicionados posteriormente. Exclusões pedem confirmação. Um projeto pode voltar a rascunho para sair da vitrine.
 

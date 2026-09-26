@@ -110,16 +110,23 @@ test("login valida senha e cria sessão de produtora", async () => {
   assert.deepEqual(migrated.genres, ["Terror"]);
   assert.equal(migrated.releaseDate, null);
 });
-test("criador administra membros sem compartilhar acesso de telespectador", async () => {
-  assert.equal((await req("/api/login", "POST", { email: "studio@panexus.local", password: "NexusStudio@2026", area: "viewer" })).status, 403);
-  assert.equal((await req("/api/library", "GET", null, producerCookie)).status, 403);
+test("criador administra membros e também assiste com perfil próprio", async () => {
+  const creatorViewer = await req("/api/login", "POST", { email: "studio@panexus.local", password: "NexusStudio@2026", area: "viewer" });
+  assert.equal(creatorViewer.status, 200);
+  assert.equal(creatorViewer.data.user.role, "producer");
+  const creatorProfile = creatorViewer.data.profiles[0].id;
+  assert.equal((await req("/api/library", "GET", null, producerCookie, creatorProfile)).status, 200);
+  assert.equal((await req("/api/favorites/aurora", "PUT", {saved:true}, producerCookie, creatorProfile)).status, 200);
+  assert.equal((await req("/api/library", "GET", null, producerCookie, creatorProfile)).data.favorites.includes("aurora"), true);
   const made = await req("/api/studio/members", "POST", {
     name: "Artista", email: "artista@example.local", password: "Segura@2026", role: "producer"
   }, producerCookie);
   assert.equal(made.status, 201);
   assert.equal(made.data.role, "producer");
   assert.equal("password" in made.data, false);
-  assert.equal((await req("/api/login", "POST", { email: "artista@example.local", password: "Segura@2026", area: "viewer" })).status, 403);
+  const artistViewer = await req("/api/login", "POST", { email: "artista@example.local", password: "Segura@2026", area: "viewer" });
+  assert.equal(artistViewer.status, 200);
+  assert.equal(artistViewer.data.profiles.length, 1);
   const creatorLogin = await req("/api/login", "POST", { email: "artista@example.local", password: "Segura@2026", area: "studio" });
   assert.equal(creatorLogin.status, 200);
   assert.equal((await req("/api/studio/members", "GET", null, creatorLogin.cookie)).status, 200);

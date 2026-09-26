@@ -12,8 +12,8 @@
 
 `users → profiles → favorites / progress`; `projects → seasons → episodes`.
 
-- Contas têm papel `viewer` (telespectador) ou `producer` (criador). O cadastro público cria somente telespectadores. O login recebe a área desejada (`viewer` ou `studio`) e rejeita o papel incompatível antes de criar a sessão. A área de criação só aceita criadores; perfis, listas e progresso só aceitam telespectadores.
-- Criadores administram membros nas rotas `/api/studio/members`: listam e criam contas, ou alteram o papel de outros membros. Senhas iniciais são armazenadas apenas como hash e não retornam na API. Telespectadores criados ou rebaixados recebem um perfil padrão se ainda não tiverem um. Alterar o papel revoga as sessões do membro; alterar o próprio papel é proibido.
+- Contas têm papel `viewer` (telespectador) ou `producer` (criador). O cadastro público cria somente telespectadores. O login na área `studio` exige criador; na área `viewer` aceita ambos. Criadores têm acesso total à produtora e às funções de assistir, com perfil, lista e progresso próprios. Telespectadores não acessam APIs da produtora.
+- Criadores administram membros nas rotas `/api/studio/members`: listam e criam contas, ou alteram o papel de outros membros. Senhas iniciais são armazenadas apenas como hash e não retornam na API. Toda conta recebe um perfil padrão; contas de criador antigas sem perfil recebem um ao entrar. Alterar o papel revoga as sessões do membro; alterar o próprio papel é proibido.
 - Sessões duram sete dias e ficam no banco. Cookie HttpOnly e SameSite Strict. Senhas são protegidas com scrypt e salt individual.
 - O servidor verifica propriedade do perfil para lista e progresso. Trocar o identificador de perfil no cliente não concede acesso aos dados de outra conta.
 - Até cinco perfis por conta. Cores disponíveis: violet, coral, mint e blue.

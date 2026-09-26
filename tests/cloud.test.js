@@ -79,12 +79,25 @@ test("backend publicado gerencia membros e separa entradas", async () => {
   })).status, 403);
   const changed = await request("/api/studio/members/" + created.data.id, "PUT", { role: "producer" });
   assert.equal(changed.status, 200, JSON.stringify(changed.data));
+  const library = await request("/api/library");
+  assert.equal(library.status, 200);
+  assert.deepEqual(library.data.favorites, []);
   assert.equal((await request("/api/login", "POST", {
     email: "animadora@example.test", password: "Segura@2026", area: "viewer"
-  })).status, 403);
+  })).status, 200);
   assert.equal((await request("/api/login", "POST", {
     email: "animadora@example.test", password: "Segura@2026", area: "studio"
   })).status, 200);
+  const legacyCreator = await request("/api/studio/members", "POST", {
+    name: "Criador antigo", email: "legado@example.test", password: "Segura@2026", role: "producer"
+  });
+  assert.equal(legacyCreator.status, 201);
+  await globalThis.nexusTestPool.query('DELETE FROM nexus_profiles WHERE "userId"=$1', [legacyCreator.data.id]);
+  const legacyLogin = await request("/api/login", "POST", {
+    email: "legado@example.test", password: "Segura@2026", area: "viewer"
+  });
+  assert.equal(legacyLogin.status, 200);
+  assert.equal(legacyLogin.data.profiles.length, 1);
 });
 test("upload na nuvem usa bucket privado e entrega URL temporária", async () => {
   const calls = [];
