@@ -109,7 +109,7 @@ function header() {
   return `<header>${brand()}<nav aria-label="Menu principal"><a class="${state.tab === "home" ? "active" : ""}" href="#home">Início</a><a class="${state.tab === "catalog" ? "active" : ""}" href="#catalog">Explorar</a><a class="${state.tab === "list" ? "active" : ""}" href="#list">Minha lista</a></nav><div class="header-right"><button class="icon" data-action="search" aria-label="Buscar desenhos">${ico("search")}</button><span class="divider"></span><a class="studio-link" href="#studio">${ico("film")} Área da produtora</a>${state.user ? `<button class="profile-button" data-action="profiles" aria-label="Trocar perfil">${avatar(state.profile)}<span>${esc(state.profile?.name || state.user.name)}</span><span class="down">⌄</span></button>` : '<button class="btn small" data-action="login">Entrar</button>'}</div></header>`;
 }
 const footer = () =>
-  `<footer><div><strong>P.A <b>NEXUS</b> STUDIO<span>✦</span></strong><p>Histórias que conectam universos.</p></div><span>Feito de imaginação. Feito para você.<br><small>© 2026 P.A Nexus Studio · Versão local</small></span><a href="#studio">Portal da produtora ${ico("arrow")}</a></footer>`;
+  `<footer><div><strong>P.A <b>NEXUS</b> STUDIO<span>✦</span></strong><p>Histórias que conectam universos.</p></div><span>Feito de imaginação. Feito para você.<br><small>© 2026 P.A Nexus Studio${hosted ? "" : " · Versão local"}</small></span><a href="#studio">Portal da produtora ${ico("arrow")}</a></footer>`;
 const image = (p) => p.cover || "/assets/brand.jpeg";
 const genreOptions = ["Ação", "Aventura", "Comédia", "Drama", "Fantasia", "Ficção científica", "Infantil", "Mistério", "Musical", "Romance", "Suspense", "Terror"];
 const genres = (p) => p.genres?.length ? p.genres : [p.genre];

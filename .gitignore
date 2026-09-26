@@ -1,7 +1,7 @@
 node_modules/
 data/
 data-initial-failed/
-uploads/
+/uploads/
 *.log
 test-results/
 .env

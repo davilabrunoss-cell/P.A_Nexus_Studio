@@ -65,7 +65,7 @@ No plano gratuito, cada upload de mídia está limitado a 50 MiB, com até 1 GB 
 
 ### Endereço gratuito no Cloudflare Pages
 
-O projeto Pages `pa-nexus-studio` é separado do Hub Central e usa a pasta `public` do repositório como saída estática. O endereço gratuito é `https://pa-nexus-studio.pages.dev`; não requer domínio comprado. A função em `functions/api/[[path]].js` encaminha `/api/*` ao serviço Node do Nexus no Render. Configure `BACKEND_ORIGIN` no Pages com a URL HTTPS desse serviço, sem barra final, e `PUBLIC_ORIGIN=https://pa-nexus-studio.pages.dev` no Render. O arquivo `public/_routes.json` restringe as invocações da função à API. Sem `BACKEND_ORIGIN`, a interface carrega, mas login, catálogo e painel retornam indisponibilidade.
+O projeto Pages `pa-nexus-studio` é separado do Hub Central e usa a pasta `public` do repositório como saída estática. O endereço gratuito é `https://pa-nexus-studio.pages.dev`; não requer domínio comprado. As Functions encaminham `/api/*` e `/uploads/*` ao serviço Node do Nexus no Render; o último caminho devolve o redirecionamento temporário do Storage privado. Configure `BACKEND_ORIGIN` no Pages com a URL HTTPS desse serviço, sem barra final, e `PUBLIC_ORIGIN=https://pa-nexus-studio.pages.dev` no Render. O arquivo `public/_routes.json` restringe as invocações da função a essas rotas. Sem `BACKEND_ORIGIN`, a interface carrega, mas login, catálogo e painel retornam indisponibilidade.
 
 ## Catálogo de exemplo
 

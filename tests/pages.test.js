@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { onRequest } from "../functions/api/[[path]].js";
+import { onRequest as onUpload } from "../functions/uploads/[[path]].js";
 
 test("Pages encaminha API com sessão e preserva redirecionamento de mídia", async () => {
   const originalFetch = globalThis.fetch;
@@ -24,4 +25,5 @@ test("Pages encaminha API com sessão e preserva redirecionamento de mídia", as
   } finally { globalThis.fetch = originalFetch; }
   assert.equal((await onRequest({ request: new Request("https://pa-nexus-studio.pages.dev/api/health"),
     env: {} })).status, 503);
+  assert.equal(onUpload, onRequest);
 });
